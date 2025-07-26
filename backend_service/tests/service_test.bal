@@ -1,5 +1,5 @@
-import ballerina/io;
 import ballerina/http;
+import ballerina/io;
 import ballerina/test;
 
 http:Client testClient = check new ("http://localhost:9090");
@@ -31,3 +31,15 @@ function testServiceWithEmptyName() returns error? {
 function afterSuiteFunc() {
     io:println("I'm the after suite function!");
 }
+
+// import ballerina/http;
+
+// // Create one HTTP listener
+// listener http:Listener backendListener = new (8080);
+
+// // Attach each controller service to a sub-path (e.g. /accounts, /transactions)
+// service /finance on backendListener {
+//     // *accounts_controller.accountsService,
+//     // *transactions_controller.transactionsService,
+//     // *budgets_controller.budgetsService
+// }
