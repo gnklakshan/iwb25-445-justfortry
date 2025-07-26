@@ -1,0 +1,12 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: ballerina-postgres-db
+    environment:
+      POSTGRES_DB: ballerina_db
+      POSTGRES_PASSWORD: 1968
+      POSTGRES_USER: postgres
+    ports:
+      - "5001:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql

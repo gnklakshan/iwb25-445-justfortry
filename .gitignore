@@ -1,0 +1,14 @@
+# === Env Files ===
+**/.env
+**/.env.local
+**/.env.*.local
+
+# === Git Ignore for backend_service ===
+backend_service/target/
+backend_service/generated/
+backend_service/Config.toml
+
+# === Common Ignored Files ===
+*.log
+.vscode/
+.idea/
