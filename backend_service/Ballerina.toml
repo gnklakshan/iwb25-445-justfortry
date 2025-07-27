@@ -2,7 +2,12 @@
 org = "user"
 name = "backend_service"
 version = "0.1.0"
-distribution = "2201.12.7"
+distribution = "2201.8.5"
 
 [build-options]
 observabilityIncluded = true
+
+[[platform.java17.dependency]]
+groupId = "org.postgresql"
+artifactId = "postgresql"
+version = "42.7.2"
