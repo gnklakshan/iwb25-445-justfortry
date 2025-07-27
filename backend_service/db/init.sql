@@ -10,10 +10,9 @@ $$ LANGUAGE plpgsql;
 -- users table
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
-    clerkUserId TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     name TEXT,
-    imageUrl TEXT,
+    hashedPassword TEXT NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -96,7 +95,6 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updatedAt_column();
 
 -- Indexes
-CREATE UNIQUE INDEX users_clerkUserId_key ON users(clerkUserId);
 CREATE UNIQUE INDEX users_email_key ON users(email);
 CREATE INDEX accounts_userId_idx ON accounts(userId);
 CREATE INDEX transactions_userId_idx ON transactions(userId);
