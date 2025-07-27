@@ -360,6 +360,8 @@ dependencies = [
 	{org = "ballerinax", name = "java.jdbc"}
 ]
 modules = [
-	{org = "user", packageName = "backend_service", moduleName = "backend_service"}
+	{org = "user", packageName = "backend_service", moduleName = "backend_service"},
+	{org = "user", packageName = "backend_service", moduleName = "backend_service.database"},
+	{org = "user", packageName = "backend_service", moduleName = "backend_service.types"}
 ]
 
