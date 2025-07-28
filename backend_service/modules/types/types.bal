@@ -1,11 +1,24 @@
+import ballerina/time;
+
+// authentication module types__________________________________________________________
+public type User record {|
+    string id;
+    string email;
+    string name?;
+    string hashedPassword;
+    time:Utc createdAt;
+    time:Utc updatedAt;
+|};
+
 public type LoginRequest record {|
-    string username;
+    string email;
     string password;
 |};
 
 # Signup request payload
 public type SignupRequest record {|
-    string username;
+    string email;
+    string name;
     string password;
 |};
 
@@ -19,7 +32,7 @@ public type AuthResponse record {|
 # JWT payload
 public type JwtPayload record {|
     string sub; // subject (user ID)
-    string username;
+    string email;
     decimal exp; // expiration time
     decimal iat; // issued at time
 |};
@@ -27,5 +40,5 @@ public type JwtPayload record {|
 # Authenticated user info
 public type AuthenticatedUser record {|
     string userId;
-    string username;
+    string email;
 |};

@@ -9,22 +9,21 @@ import ballerina/uuid;
 configurable string jwtSecret = "your-secret-key-change-this-in-production";
 
 # Signup function using database
-public isolated function signupUser(database:DatabaseConfig dbConfig, types:SignupRequest signupRequest) returns types:AuthResponse|error {
-    string username = signupRequest.username;
+public isolated function signupUser(types:SignupRequest signupRequest) returns types:AuthResponse|error {
+    string email = signupRequest.email.trim();
     string password = signupRequest.password;
 
     // Validate input
-    string trimmedUsername = username.trim();
-    if trimmedUsername.length() == 0 || password.length() < 6 {
+    if !isValidEmail(email) || password.length() < 6 {
         return {
             success: false,
-            message: "Username cannot be empty and password must be at least 6 characters",
+            message: "Email must be valid and password must be at least 6 characters",
             token: ()
         };
     }
 
     // Check if user already exists
-    boolean|error userExists = database:usernameExists(dbConfig, username);
+    boolean|error userExists = database:emailExists(email);
     if userExists is error {
         return error("Database error: " + userExists.message());
     }
@@ -46,16 +45,16 @@ public isolated function signupUser(database:DatabaseConfig dbConfig, types:Sign
     string userId = uuid:createType1AsString();
     time:Utc currentTime = time:utcNow();
 
-    database:User newUser = {
+    types:User newUser = {
         id: userId,
-        username: username,
+        email: email,
         hashedPassword: hashedPassword,
         createdAt: currentTime,
         updatedAt: currentTime
     };
 
     // Save user to database
-    error? createResult = database:createUser(dbConfig, newUser);
+    error? createResult = database:createUser(newUser);
     if createResult is error {
         return error("Failed to create user: " + createResult.message());
     }
@@ -68,12 +67,21 @@ public isolated function signupUser(database:DatabaseConfig dbConfig, types:Sign
 }
 
 # Login function using database
-public isolated function loginUser(database:DatabaseConfig dbConfig, types:LoginRequest loginRequest) returns types:AuthResponse|error {
-    string username = loginRequest.username;
+public isolated function loginUser(types:LoginRequest loginRequest) returns types:AuthResponse|error {
+    string email = loginRequest.email.trim();
     string password = loginRequest.password;
 
+    //validate  email
+    if !isValidEmail(email) {
+        return {
+            success: false,
+            message: "Email must be valid",
+            token: ()
+        };
+    }
+
     // Get user from database
-    database:User|error userResult = database:getUserByUsername(dbConfig, username);
+    types:User|error userResult = database:getUserByEmail(email);
     if userResult is error {
         return {
             success: false,
@@ -82,7 +90,7 @@ public isolated function loginUser(database:DatabaseConfig dbConfig, types:Login
         };
     }
 
-    database:User user = userResult;
+    types:User user = userResult;
 
     // Verify password
     byte[] passwordBytes = password.toBytes();
@@ -112,7 +120,7 @@ public isolated function loginUser(database:DatabaseConfig dbConfig, types:Login
 }
 
 # Generate JWT token
-isolated function generateJwtToken(database:User user) returns string|error {
+isolated function generateJwtToken(types:User user) returns string|error {
     time:Utc currentTime = time:utcNow();
     time:Utc expirationTime = time:utcAddSeconds(currentTime, 3600); // 1 hour expiration
 
@@ -123,7 +131,7 @@ isolated function generateJwtToken(database:User user) returns string|error {
 
     types:JwtPayload payload = {
         sub: user.id,
-        username: user.username,
+        email: user.email,
         exp: expirationSeconds,
         iat: currentSeconds
     };
@@ -210,18 +218,8 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
 
     return {
         userId: payload.sub,
-        username: payload.username
+        email: payload.email
     };
-}
-
-# Get user by username from database
-public isolated function getUserByUsername(database:DatabaseConfig dbConfig, string username) returns database:User|error {
-    return database:getUserByUsername(dbConfig, username);
-}
-
-# Get user by ID from database
-public isolated function getUserById(database:DatabaseConfig dbConfig, string userId) returns database:User|error {
-    return database:getUserById(dbConfig, userId);
 }
 
 # Helper function to convert time:Utc to decimal seconds
@@ -249,3 +247,16 @@ isolated function decodeBase64String(string encodedString) returns byte[]|error 
 
     return result;
 }
+
+// // Simple base64 decoding approach
+// int[] codePoints = encodedString.toCodePointInts();
+// byte[] result = [];
+
+// foreach int codePoint in codePoints {
+//    if  codePoint >= 0 && codePoint <= 255 {
+//             result .push(<byte>codePoint);
+//  }
+// }
+
+// return result;
+// }
