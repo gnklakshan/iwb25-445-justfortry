@@ -1,7 +1,6 @@
 import backend_service.types;
 
 import ballerina/sql;
-// import ballerina/time;
 import ballerinax/java.jdbc as jdbc;
 
 # Database configuration - these will be read from Config.toml or environment variables
@@ -132,3 +131,17 @@ public isolated function emailExists(string email) returns boolean|error {
     return result.count > 0;
 }
 
+# Create a new account in the database
+# + account - Account data to insert
+# + return - Success status or error
+public isolated function createAccount(types:Account account) returns error? {
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        INSERT INTO accounts (id, name, accountType, balance, isDefault, userId, createdAt, updatedAt)
+        VALUES (${account.id}, ${account.name}, ${account.accountType}, ${account.balance}, ${account.isDefault}, ${account.userId}, ${account.createdAt}, ${account.updatedAt})
+    `);
+
+    if result is sql:Error {
+        return error("Failed to create account: " + result.message());
+    }
+    return;
+}
