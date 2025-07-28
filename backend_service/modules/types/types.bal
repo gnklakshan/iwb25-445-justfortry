@@ -1,13 +1,19 @@
 import ballerina/time;
 
+//commn Types
+
+public type timeMetadata record {|
+    time:Utc createdAt;
+    time:Utc updatedAt;
+|};
+
 // authentication module types__________________________________________________________
 public type User record {|
     string id;
     string email;
     string name?;
     string hashedPassword;
-    time:Utc createdAt;
-    time:Utc updatedAt;
+    *timeMetadata;
 |};
 
 public type LoginRequest record {|
@@ -41,4 +47,28 @@ public type JwtPayload record {|
 public type AuthenticatedUser record {|
     string userId;
     string email;
+|};
+
+// Account module types__________________________________________________________
+
+public type Account record {|
+    string id;
+    string name;
+    string accountType;
+    decimal balance;
+    boolean isDefault;
+    string userId;
+    *timeMetadata;
+|};
+
+public type CreateAccountRequest record {|
+    string name;
+    string accountType;
+    decimal balance;
+    boolean isDefault;
+|};
+
+public type CreateAccountResponse record {|
+    boolean success;
+    Account data;
 |};
