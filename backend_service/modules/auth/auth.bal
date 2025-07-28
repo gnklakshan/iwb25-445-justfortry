@@ -39,7 +39,7 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
     // Hash password
     byte[] passwordBytes = password.toBytes();
     byte[] hashedPasswordBytes = crypto:hashSha256(passwordBytes);
-    string hashedPassword = hashedPasswordBytes.toBase64();
+    string hashedPassword = hashedPasswordBytes.toBase16();
 
     // Create new user
     string userId = uuid:createType1AsString();
@@ -95,7 +95,7 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     // Verify password
     byte[] passwordBytes = password.toBytes();
     byte[] hashedPasswordBytes = crypto:hashSha256(passwordBytes);
-    string hashedPassword = hashedPasswordBytes.toBase64();
+    string hashedPassword = hashedPasswordBytes.toBase16();
 
     if hashedPassword != user.hashedPassword {
         return {
@@ -125,7 +125,6 @@ isolated function generateJwtToken(types:User user) returns string|error {
     time:Utc expirationTime = time:utcAddSeconds(currentTime, 3600); // 1 hour expiration
 
     // Convert time:Utc to decimal seconds properly
-    // time:Utc is a tuple [int, decimal] where first is seconds, second is fractional part
     decimal currentSeconds = convertUtcToDecimal(currentTime);
     decimal expirationSeconds = convertUtcToDecimal(expirationTime);
 
@@ -138,12 +137,15 @@ isolated function generateJwtToken(types:User user) returns string|error {
 
     string payloadJson = payload.toJsonString();
     byte[] payloadBytes = payloadJson.toBytes();
-    string encodedPayload = payloadBytes.toBase64();
+    string encodedPayload = encodeBase64(payloadBytes);
 
     // Create signature using HMAC
     byte[] secretBytes = jwtSecret.toBytes();
-    byte[] signature = check crypto:hmacSha256(payloadBytes, secretBytes);
-    string encodedSignature = signature.toBase64();
+    byte[]|crypto:Error signature = crypto:hmacSha256(payloadBytes, secretBytes);
+    if signature is crypto:Error {
+        return error("Failed to create signature: " + signature.message());
+    }
+    string encodedSignature = encodeBase64(signature);
 
     // Simple token format: payload.signature
     return encodedPayload + "." + encodedSignature;
@@ -152,7 +154,7 @@ isolated function generateJwtToken(types:User user) returns string|error {
 # Validate JWT token
 public isolated function validateJwtToken(string token) returns types:JwtPayload|error {
     // Find the last dot to separate payload and signature
-    int? lastDotIndex = token.lastIndexOf(".");
+    int? lastDotIndex = findLastIndexOf(token, ".");
 
     if lastDotIndex is () {
         return error("Invalid token format");
@@ -162,7 +164,11 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
     string encodedSignature = token.substring(lastDotIndex + 1);
 
     // Decode payload
-    byte[] payloadBytes = check decodeBase64String(encodedPayload);
+    byte[]|error payloadBytesResult = decodeBase64(encodedPayload);
+    if payloadBytesResult is error {
+        return error("Invalid token payload encoding");
+    }
+    byte[] payloadBytes = payloadBytesResult;
 
     string|error payloadJsonResult = string:fromBytes(payloadBytes);
     if payloadJsonResult is error {
@@ -182,12 +188,12 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
 
     // Verify signature
     byte[] secretBytes = jwtSecret.toBytes();
-    byte[]|error expectedSignatureResult = crypto:hmacSha256(payloadBytes, secretBytes);
-    if expectedSignatureResult is error {
+    byte[]|crypto:Error expectedSignatureResult = crypto:hmacSha256(payloadBytes, secretBytes);
+    if expectedSignatureResult is crypto:Error {
         return error("Signature verification failed");
     }
     byte[] expectedSignature = expectedSignatureResult;
-    string expectedEncodedSignature = expectedSignature.toBase64();
+    string expectedEncodedSignature = encodeBase64(expectedSignature);
 
     if encodedSignature != expectedEncodedSignature {
         return error("Invalid token signature");
@@ -225,38 +231,25 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
 # Helper function to convert time:Utc to decimal seconds
 isolated function convertUtcToDecimal(time:Utc utcTime) returns decimal {
     // time:Utc is a tuple [int, decimal]
-    // Extract the integral seconds and fractional seconds
     int integralSeconds = utcTime[0];
     decimal fractionalSeconds = utcTime[1];
-
-    // Combine them to get total decimal seconds
     return <decimal>integralSeconds + fractionalSeconds;
 }
 
-# Helper function to decode base64 string
-isolated function decodeBase64String(string encodedString) returns byte[]|error {
-    // Simple base64 decoding approach
-    int[] codePoints = encodedString.toCodePointInts();
-    byte[] result = [];
+# Helper function to find last index of a substring
+isolated function findLastIndexOf(string str, string substr) returns int? {
+    int? lastIndex = ();
+    int startIndex = 0;
 
-    foreach int codePoint in codePoints {
-        if codePoint >= 0 && codePoint <= 255 {
-            result.push(<byte>codePoint);
+    while true {
+        int? currentIndex = str.indexOf(substr, startIndex);
+        if currentIndex is () {
+            break;
         }
+        lastIndex = currentIndex;
+        startIndex = currentIndex + 1;
     }
 
-    return result;
+    return lastIndex;
 }
 
-// // Simple base64 decoding approach
-// int[] codePoints = encodedString.toCodePointInts();
-// byte[] result = [];
-
-// foreach int codePoint in codePoints {
-//    if  codePoint >= 0 && codePoint <= 255 {
-//             result .push(<byte>codePoint);
-//  }
-// }
-
-// return result;
-// }
