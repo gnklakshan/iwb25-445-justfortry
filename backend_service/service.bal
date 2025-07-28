@@ -1,31 +1,99 @@
-import ballerina/http;
+import backend_service.auth;
 import backend_service.database;
+import backend_service.types;
 
-# Database configuration
-configurable string dbHost = "localhost";
-configurable int dbPort = 5001;
-configurable string dbName = "ballerina_db";
-configurable string dbUsername = "postgres";
-configurable string dbPassword = "1968";
+import ballerina/http;
 
-# Initialize database with configuration (immutable)
-final readonly & database:DatabaseConfig dbConfig = {
-    host: dbHost,
-    port: dbPort,
-    database: dbName,
-    username: dbUsername,
-    password: dbPassword
-};
-
-# A simple service for testing database connectivity
-# bound to port `9090`.
+# Main service with authentication endpoints and protected resources
 service / on new http:Listener(9090) {
+    # User signup endpoint
+    # + signupRequest - User signup data
+    # + return - Authentication response or error
+    isolated resource function post auth/signup(types:SignupRequest signupRequest) returns types:AuthResponse|http:BadRequest|http:Conflict|http:InternalServerError {
+        types:AuthResponse|error result = auth:signupUser(signupRequest);
 
-    # Database connectivity test endpoint
+        if result is error {
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: "Internal server error: " + result.message(),
+                    token: ()
+                }
+            };
+        }
+
+        if !result.success {
+            if result.message == "User already exists" {
+                return <http:Conflict>{
+                    body: result
+                };
+            } else {
+                return <http:BadRequest>{
+                    body: result
+                };
+            }
+        }
+
+        return result;
+    }
+
+    # User login endpoint
+    # + loginRequest - User login credentials
+    # + return - Authentication response with token or error
+    isolated resource function post auth/login(types:LoginRequest loginRequest) returns types:AuthResponse|http:Unauthorized|http:InternalServerError {
+        types:AuthResponse|error result = auth:loginUser(loginRequest);
+
+        if result is error {
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: "Internal server error: " + result.message(),
+                    token: ()
+                }
+            };
+        }
+
+        if !result.success {
+            return <http:Unauthorized>{
+                body: result
+            };
+        }
+
+        return result;
+    }
+
+    # Protected database connectivity test endpoint
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
     # + return - JSON response with connection status or error
-    isolated resource function get test\-db() returns json|http:InternalServerError {
-        record {|string status; int test_connection; string current_time; string database; string host; int port;|}|error result = database:testConnection(dbConfig);
-        
+    isolated resource function get test\-db(http:Request request) returns json|http:InternalServerError|http:Unauthorized {
+        // Extract Authorization header
+        string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+
+        if authHeader is http:HeaderNotFoundError {
+            return <http:Unauthorized>{
+                body: {
+                    "error": "Authorization header required",
+                    "message": "Please provide a valid JWT token in Authorization header"
+                }
+            };
+        }
+
+        // Extract and validate user from token
+        types:AuthenticatedUser|error authenticatedUser = auth:extractUserFromToken(authHeader);
+
+        if authenticatedUser is error {
+            return <http:Unauthorized>{
+                body: {
+                    "error": "Invalid or expired token",
+                    "message": authenticatedUser.message()
+                }
+            };
+        }
+
+        // Token is valid, proceed with database test
+        record {|string status; int test_connection; string current_time;|}|error result = database:testConnection();
+
         if result is error {
             return <http:InternalServerError>{
                 body: {
@@ -34,7 +102,18 @@ service / on new http:Listener(9090) {
                 }
             };
         }
-        
-        return result.toJson();
+
+        // Create response with authenticated user info
+        json responseWithUser = {
+            "status": result.status,
+            "test_connection": result.test_connection,
+            "current_time": result.current_time,
+            "authenticated_user": {
+                "user_id": authenticatedUser.userId,
+                "username": authenticatedUser.email
+            }
+        };
+
+        return responseWithUser;
     }
 }
