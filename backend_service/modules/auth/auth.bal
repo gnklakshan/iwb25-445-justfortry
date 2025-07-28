@@ -39,7 +39,7 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
     // Hash password
     byte[] passwordBytes = password.toBytes();
     byte[] hashedPasswordBytes = crypto:hashSha256(passwordBytes);
-    string hashedPassword = hashedPasswordBytes.toBase64();
+    string hashedPassword = hashedPasswordBytes.toBase16();
 
     // Create new user
     string userId = uuid:createType1AsString();
@@ -95,7 +95,7 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     // Verify password
     byte[] passwordBytes = password.toBytes();
     byte[] hashedPasswordBytes = crypto:hashSha256(passwordBytes);
-    string hashedPassword = hashedPasswordBytes.toBase64();
+    string hashedPassword = hashedPasswordBytes.toBase16();
 
     if hashedPassword != user.hashedPassword {
         return {
@@ -125,7 +125,6 @@ isolated function generateJwtToken(types:User user) returns string|error {
     time:Utc expirationTime = time:utcAddSeconds(currentTime, 3600); // 1 hour expiration
 
     // Convert time:Utc to decimal seconds properly
-    // time:Utc is a tuple [int, decimal] where first is seconds, second is fractional part
     decimal currentSeconds = convertUtcToDecimal(currentTime);
     decimal expirationSeconds = convertUtcToDecimal(expirationTime);
 
@@ -138,12 +137,15 @@ isolated function generateJwtToken(types:User user) returns string|error {
 
     string payloadJson = payload.toJsonString();
     byte[] payloadBytes = payloadJson.toBytes();
-    string encodedPayload = payloadBytes.toBase64();
+    string encodedPayload = encodeBase64(payloadBytes);
 
     // Create signature using HMAC
     byte[] secretBytes = jwtSecret.toBytes();
-    byte[] signature = check crypto:hmacSha256(payloadBytes, secretBytes);
-    string encodedSignature = signature.toBase64();
+    byte[]|crypto:Error signature = crypto:hmacSha256(payloadBytes, secretBytes);
+    if signature is crypto:Error {
+        return error("Failed to create signature: " + signature.message());
+    }
+    string encodedSignature = encodeBase64(signature);
 
     // Simple token format: payload.signature
     return encodedPayload + "." + encodedSignature;
@@ -152,7 +154,7 @@ isolated function generateJwtToken(types:User user) returns string|error {
 # Validate JWT token
 public isolated function validateJwtToken(string token) returns types:JwtPayload|error {
     // Find the last dot to separate payload and signature
-    int? lastDotIndex = token.lastIndexOf(".");
+    int? lastDotIndex = findLastIndexOf(token, ".");
 
     if lastDotIndex is () {
         return error("Invalid token format");
@@ -162,7 +164,11 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
     string encodedSignature = token.substring(lastDotIndex + 1);
 
     // Decode payload
-    byte[] payloadBytes = check decodeBase64String(encodedPayload);
+    byte[]|error payloadBytesResult = decodeBase64(encodedPayload);
+    if payloadBytesResult is error {
+        return error("Invalid token payload encoding");
+    }
+    byte[] payloadBytes = payloadBytesResult;
 
     string|error payloadJsonResult = string:fromBytes(payloadBytes);
     if payloadJsonResult is error {
@@ -182,12 +188,12 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
 
     // Verify signature
     byte[] secretBytes = jwtSecret.toBytes();
-    byte[]|error expectedSignatureResult = crypto:hmacSha256(payloadBytes, secretBytes);
-    if expectedSignatureResult is error {
+    byte[]|crypto:Error expectedSignatureResult = crypto:hmacSha256(payloadBytes, secretBytes);
+    if expectedSignatureResult is crypto:Error {
         return error("Signature verification failed");
     }
     byte[] expectedSignature = expectedSignatureResult;
-    string expectedEncodedSignature = expectedSignature.toBase64();
+    string expectedEncodedSignature = encodeBase64(expectedSignature);
 
     if encodedSignature != expectedEncodedSignature {
         return error("Invalid token signature");
@@ -225,38 +231,100 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
 # Helper function to convert time:Utc to decimal seconds
 isolated function convertUtcToDecimal(time:Utc utcTime) returns decimal {
     // time:Utc is a tuple [int, decimal]
-    // Extract the integral seconds and fractional seconds
     int integralSeconds = utcTime[0];
     decimal fractionalSeconds = utcTime[1];
-
-    // Combine them to get total decimal seconds
     return <decimal>integralSeconds + fractionalSeconds;
 }
 
-# Helper function to decode base64 string
-isolated function decodeBase64String(string encodedString) returns byte[]|error {
-    // Simple base64 decoding approach
-    int[] codePoints = encodedString.toCodePointInts();
-    byte[] result = [];
-
-    foreach int codePoint in codePoints {
-        if codePoint >= 0 && codePoint <= 255 {
-            result.push(<byte>codePoint);
+# Helper function to find last index of a substring
+isolated function findLastIndexOf(string str, string substr) returns int? {
+    int? lastIndex = ();
+    int startIndex = 0;
+    
+    while true {
+        int? currentIndex = str.indexOf(substr, startIndex);
+        if currentIndex is () {
+            break;
         }
+        lastIndex = currentIndex;
+        startIndex = currentIndex + 1;
     }
+    
+    return lastIndex;
+}
 
+# Simple Base64 encoding implementation
+isolated function encodeBase64(byte[] input) returns string {
+    string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    string result = "";
+    int i = 0;
+    
+    while i < input.length() {
+        int byte1 = input[i];
+        int byte2 = (i + 1 < input.length()) ? input[i + 1] : 0;
+        int byte3 = (i + 2 < input.length()) ? input[i + 2] : 0;
+        
+        int combined = (byte1 << 16) | (byte2 << 8) | byte3;
+        
+        // Extract 6-bit indices and get corresponding base64 characters
+        int index1 = (combined >> 18) & 63;
+        int index2 = (combined >> 12) & 63;
+        int index3 = (combined >> 6) & 63;
+        int index4 = combined & 63;
+        
+        result += getCharAt(base64Chars, index1);
+        result += getCharAt(base64Chars, index2);
+        result += (i + 1 < input.length()) ? getCharAt(base64Chars, index3) : "=";
+        result += (i + 2 < input.length()) ? getCharAt(base64Chars, index4) : "=";
+        
+        i += 3;
+    }
+    
     return result;
 }
 
-// // Simple base64 decoding approach
-// int[] codePoints = encodedString.toCodePointInts();
-// byte[] result = [];
+# Simple Base64 decoding implementation
+isolated function decodeBase64(string input) returns byte[]|error {
+    string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    byte[] result = [];
+    int i = 0;
+    
+    while i < input.length() {
+        if i + 3 >= input.length() {
+            break;
+        }
+        
+        string char1 = getCharAt(input, i);
+        string char2 = getCharAt(input, i + 1);
+        string char3 = getCharAt(input, i + 2);
+        string char4 = getCharAt(input, i + 3);
+        
+        int? index1 = base64Chars.indexOf(char1);
+        int? index2 = base64Chars.indexOf(char2);
+        int? index3 = (char3 == "=") ? 0 : base64Chars.indexOf(char3);
+        int? index4 = (char4 == "=") ? 0 : base64Chars.indexOf(char4);
+        
+        if index1 is () || index2 is () || index3 is () || index4 is () {
+            return error("Invalid base64 character");
+        }
+        
+        int combined = (index1 << 18) | (index2 << 12) | (index3 << 6) | index4;
+        
+        result.push(<byte>((combined >> 16) & 255));
+        if char3 != "=" {
+            result.push(<byte>((combined >> 8) & 255));
+        }
+        if char4 != "=" {
+            result.push(<byte>(combined & 255));
+        }
+        
+        i += 4;
+    }
+    
+    return result;
+}
 
-// foreach int codePoint in codePoints {
-//    if  codePoint >= 0 && codePoint <= 255 {
-//             result .push(<byte>codePoint);
-//  }
-// }
-
-// return result;
-// }
+# Helper function to get character at specific index
+isolated function getCharAt(string str, int index) returns string {
+    return str.substring(index, index + 1);
+}
