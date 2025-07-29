@@ -16,7 +16,7 @@ public isolated function createNewAccount(http:Request request, types:CreateAcco
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
 
     if authResult is http:Unauthorized {
-        return error("Unauthorized: Invalid or missing token");
+        return error("Unauthorized: Authentication required to create an account");
     }
 
     types:AuthenticatedUser authenticatedUser = authResult;
@@ -40,7 +40,7 @@ public isolated function createNewAccount(http:Request request, types:CreateAcco
     // Save account to database
     error? createResult = database:createAccount(newAccount);
     if createResult is error {
-        return error("Failed to create account: " + createResult.message());
+        return error("Account creation failed. Please try again later.");
     }
 
     return {
