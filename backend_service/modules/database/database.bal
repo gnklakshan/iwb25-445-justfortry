@@ -105,3 +105,25 @@ public isolated function createAccount(types:Account account) returns error? {
     }
     return;
 }
+
+# Get accounts by user ID from database
+# + userId - User ID to search for
+# + return - Array of Account records or error
+public isolated function getAccountsByUserId(string userId) returns types:AccountResponse[]|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT id, name, accountType, balance, isDefault, userId
+        FROM accounts
+        WHERE userId = ${userId}
+    `;
+
+    stream<types:AccountResponse, sql:Error?> accountStream = dbClient->query(selectQuery);
+    types:AccountResponse[] accountResponses = [];
+
+    check from types:AccountResponse account in accountStream
+        do {
+            accountResponses.push(account);
+        };
+
+    check accountStream.close();
+    return accountResponses;
+}
