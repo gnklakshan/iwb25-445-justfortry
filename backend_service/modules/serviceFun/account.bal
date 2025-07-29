@@ -6,14 +6,17 @@ import ballerina/http;
 import ballerina/time;
 import ballerina/uuid;
 
-// add new account
+# Create new account function
+# + request - HTTP request with Authorization header
+# + createAccountRequest - Account creation data
+# + return - Account creation response or error
 public isolated function createNewAccount(http:Request request, types:CreateAccountRequest createAccountRequest) returns types:CreateAccountResponse|error {
 
-    // Validate authorization header using utility function with custom error
+    // Validate authorization header using utility function
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
 
     if authResult is http:Unauthorized {
-        return authResult;
+        return error("Unauthorized: Invalid or missing token");
     }
 
     types:AuthenticatedUser authenticatedUser = authResult;
@@ -24,8 +27,11 @@ public isolated function createNewAccount(http:Request request, types:CreateAcco
 
     // Create account record
     types:Account newAccount = {
-        ...createAccountRequest,
         id: accountId,
+        name: createAccountRequest.name,
+        accountType: createAccountRequest.accountType,
+        balance: createAccountRequest.balance,
+        isDefault: createAccountRequest.isDefault,
         userId: authenticatedUser.userId,
         createdAt: currentTime,
         updatedAt: currentTime

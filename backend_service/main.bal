@@ -4,8 +4,6 @@ import backend_service.serviceFun;
 import backend_service.types;
 
 import ballerina/http;
-import ballerina/time;
-import ballerina/uuid;
 
 # Main service with authentication endpoints and protected resources
 service / on new http:Listener(9090) {
@@ -66,7 +64,6 @@ service / on new http:Listener(9090) {
     }
 
     # Protected database connectivity test endpoint
-    # Protected database connectivity test endpoint
     # Requires valid JWT token in Authorization header
     # + request - HTTP request with Authorization header
     # + return - JSON response with connection status or error
@@ -106,13 +103,15 @@ service / on new http:Listener(9090) {
         return responseWithUser;
     }
 
+    # Create new account endpoint
     # Requires valid JWT token in Authorization header
     # + request - HTTP request with Authorization header
     # + createAccountRequest - Account creation data
     # + return - Account creation response or error
     isolated resource function post accounts/create(http:Request request, types:CreateAccountRequest createAccountRequest) returns types:CreateAccountResponse|http:BadRequest|http:Unauthorized|http:InternalServerError {
 
-        createResult = serviceFun:createNewAccount(request, createAccountRequest);
+        types:CreateAccountResponse|error createResult = serviceFun:createNewAccount(request, createAccountRequest);
+
         if createResult is error {
             return <http:InternalServerError>{
                 body: {
@@ -122,19 +121,6 @@ service / on new http:Listener(9090) {
             };
         }
 
-        return {
-            success: true,
-                        userId: "",
-                        createdAt: "",
-                        updatedAt: ""
-                    }
+        return createResult;
     }
-};
-}
-
-return {
-            success: true,
-            data: newAccount
-        } ;
-}
 }
