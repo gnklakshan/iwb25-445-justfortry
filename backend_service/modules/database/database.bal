@@ -73,37 +73,6 @@ public isolated function getUserByEmail(string email) returns types:User|error {
     return result;
 }
 
-# Get user by ID from database
-# + userId - User ID to search for
-# + return - User record or error if not found
-// public isolated function getUserById(string userId) returns types:User|error {
-
-//     sql:ParameterizedQuery selectQuery = `
-//         SELECT id, username, hashed_password, created_at, updated_at
-//         FROM users
-//         WHERE id = ${userId}
-//     `;
-
-//     record {|
-//         string id;
-//         string email;
-//         string hashed_password;
-//         time:Utc created_at;
-//         time:Utc updated_at;
-//     |}|sql:Error result = dbClient->queryRow(selectQuery);
-
-//     if result is sql:Error {
-//         return error("User not found or database error: " + result.message());
-//     }
-
-//     return {
-//         id: result.id,
-//         email: result.email,
-//         hashedPassword: result.hashed_password,
-//         createdAt: result.created_at,
-//         updatedAt: result.updated_at
-//     };
-// }
 # Check if email exists in database
 # + email - email to check
 # + return - True if exists, false otherwise, or error
