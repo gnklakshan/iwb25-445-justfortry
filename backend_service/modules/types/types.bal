@@ -74,3 +74,12 @@ public type CreateAccountResponse record {|
     boolean success;
     Account data;
 |};
+
+public type AccountResponse record {|
+    string id;
+    string name;
+    string accountType;
+    string balance;
+    string isDefault;
+    string userId;
+|};

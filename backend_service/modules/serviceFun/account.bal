@@ -48,3 +48,25 @@ public isolated function createNewAccount(http:Request request, types:CreateAcco
         data: newAccount
     };
 }
+
+public isolated function getAllAccounts(http:Request request) returns types:AccountResponse[]|error {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to fetch accounts");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // Fetch accounts from database
+    types:AccountResponse[]|error accountsResult = database:getAccountsByUserId(userId);
+    if accountsResult is error {
+        return error("Failed to fetch accounts. " + accountsResult.message());
+    }
+
+    types:AccountResponse[] accounts = accountsResult;
+
+    return accounts;
+}

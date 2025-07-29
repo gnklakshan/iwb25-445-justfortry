@@ -140,4 +140,42 @@ service / on new http:Listener(9090) {
 
         return createResult;
     }
+
+    # Get all accounts endpoint
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + return - JSON response with accounts array or error
+    isolated resource function get accounts(http:Request request) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:AccountResponse[]|error accountsResult = serviceFun:getAllAccounts(request);
+
+        if accountsResult is error {
+            string errorMessage = accountsResult.message();
+
+            // Check if it's an authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            // Generic error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        // Return accounts data
+        json response = {
+            "success": true,
+            "data": accountsResult.toJson()
+        };
+
+        return response;
+    }
 }
