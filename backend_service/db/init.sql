@@ -28,7 +28,7 @@ CREATE TYPE AccountType AS ENUM ('CURRENT', 'SAVINGS');
 CREATE TABLE accounts (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    type AccountType NOT NULL,
+    accountType AccountType NOT NULL,
     balance DECIMAL(65,30) NOT NULL DEFAULT 0,
     isDefault BOOLEAN NOT NULL DEFAULT FALSE,
     userId TEXT NOT NULL,

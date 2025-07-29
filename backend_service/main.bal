@@ -116,7 +116,7 @@ service / on new http:Listener(9090) {
             return <http:InternalServerError>{
                 body: {
                     success: false,
-                    message: "Failed to create account: " + createResult.message()
+                    message: createResult.message()
                 }
             };
         }
