@@ -56,7 +56,7 @@ Retrieves a single account with its transactions.
   "transactions": [
     {
       "id": "string",
-      "type": "string",
+      "transactionType": "string",
       "amount": "number",
       "description": "string",
       "date": "string",
@@ -129,7 +129,7 @@ Updates the default account for a user.
   "data": {
     "id": "string",
     "name": "string",
-    "type": "string",
+    "accountType": "string",
     "balance": "number",
     "isDefault": "boolean",
     "userId": "string",
@@ -184,7 +184,7 @@ Retrieves all transactions for a given user.
   "data": [
     {
       "id": "string",
-      "type": "string",
+      "transactionType": "string",
       "amount": "number",
       "description": "string",
       "date": "string",

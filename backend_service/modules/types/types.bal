@@ -83,3 +83,23 @@ public type AccountResponse record {|
     string isDefault;
     string userId;
 |};
+
+//transaction types__________________________________________________________
+
+type Transaction record {|
+    string id;
+    string transactionType;
+    string amount;
+    string description;
+    string date;
+    string category;
+    string receiptUrl;
+    string isRecurring;
+    string recurringInterval;
+    string nextRecurringDate;
+    string lastProcessed;
+    string status;
+    string userId;
+    string accountId;
+    *timeMetadata;
+|};
