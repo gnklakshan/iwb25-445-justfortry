@@ -21,7 +21,7 @@ Retrieves all accounts for a given user.
   {
     "id": "string",
     "name": "string",
-    "type": "string",
+    "AccountType": "string",
     "balance": "number",
     "isDefault": "boolean",
     "userId": "string",
