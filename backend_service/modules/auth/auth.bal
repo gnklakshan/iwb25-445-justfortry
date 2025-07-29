@@ -120,107 +120,86 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     };
 }
 
-# Generate JWT token
+// === JWT GENERATION ===
+
 isolated function generateJwtToken(types:User user) returns string|error {
-    time:Utc currentTime = time:utcNow();
-    time:Utc expirationTime = time:utcAddSeconds(currentTime, 3600); // 1 hour expiration
+    time:Utc now = time:utcNow();
+    time:Utc exp = time:utcAddSeconds(now, 3600); // 1 hour
 
-    // Convert time:Utc to decimal seconds properly
-    decimal currentSeconds = convertUtcToDecimal(currentTime);
-    decimal expirationSeconds = convertUtcToDecimal(expirationTime);
+    decimal iat = <decimal>now[0] + ((<decimal>now[1]) / 1000000000d);
+    decimal expVal = <decimal>exp[0] + ((<decimal>exp[1]) / 1000000000d);
 
-    types:JwtPayload payload = {
+    json header = {alg: "HS256", typ: "JWT"};
+    json payload = {
         sub: user.id,
         email: user.email,
-        exp: expirationSeconds,
-        iat: currentSeconds
+        iat: iat,
+        exp: expVal
     };
 
-    string payloadJson = payload.toJsonString();
-    byte[] payloadBytes = payloadJson.toBytes();
-    string encodedPayload = encodeBase64(payloadBytes);
+    string headerEncoded = check encodeBase64Url(header.toJsonString().toBytes());
+    string payloadEncoded = check encodeBase64Url(payload.toJsonString().toBytes());
 
-    // Create signature using HMAC
+    string signingInput = headerEncoded + "." + payloadEncoded;
+
     byte[] secretBytes = jwtSecret.toBytes();
-    byte[]|crypto:Error signature = crypto:hmacSha256(payloadBytes, secretBytes);
-    if signature is crypto:Error {
-        return error("Failed to create signature: " + signature.message());
-    }
-    string encodedSignature = encodeBase64(signature);
+    byte[] sigBytes = check crypto:hmacSha256(signingInput.toBytes(), secretBytes);
 
-    // Simple token format: payload.signature
-    return encodedPayload + "." + encodedSignature;
+    string signatureEncoded = check encodeBase64Url(sigBytes);
+
+    return signingInput + "." + signatureEncoded;
 }
 
-# Validate JWT token
+// === JWT VALIDATION ===
+
 public isolated function validateJwtToken(string token) returns types:JwtPayload|error {
-    // Find the last dot to separate payload and signature
-    int? lastDotIndex = findLastIndexOf(token, ".");
 
-    if lastDotIndex is () {
-        return error("Invalid token format");
+    string:RegExp dotPattern = re `\.`;
+    string[] parts = dotPattern.split(token);
+
+    if parts.length() != 3 {
+        return error("Authentication failed: Invalid token format");
     }
 
-    string encodedPayload = token.substring(0, lastDotIndex);
-    string encodedSignature = token.substring(lastDotIndex + 1);
+    string headerEncoded = parts[0];
+    string payloadEncoded = parts[1];
+    string signatureEncoded = parts[2];
 
-    // Decode payload
-    byte[]|error payloadBytesResult = decodeBase64(encodedPayload);
-    if payloadBytesResult is error {
-        return error("Invalid token payload encoding");
-    }
-    byte[] payloadBytes = payloadBytesResult;
+    string signingInput = headerEncoded + "." + payloadEncoded;
 
-    string|error payloadJsonResult = string:fromBytes(payloadBytes);
-    if payloadJsonResult is error {
-        return error("Invalid token payload");
-    }
-    string payloadJson = payloadJsonResult;
+    byte[] expectedSig = check crypto:hmacSha256(signingInput.toBytes(), jwtSecret.toBytes());
+    string expectedSigEncoded = check encodeBase64Url(expectedSig);
 
-    json|error payloadJsonValue = payloadJson.fromJsonString();
-    if payloadJsonValue is error {
-        return error("Invalid JSON in token");
+    if signatureEncoded != expectedSigEncoded {
+        return error("Signature mismatch");
     }
 
-    types:JwtPayload|error payload = payloadJsonValue.cloneWithType();
-    if payload is error {
-        return error("Invalid token structure");
-    }
+    byte[] payloadBytes = check decodeBase64Url(payloadEncoded);
+    string payloadJson = check string:fromBytes(payloadBytes);
+    json payloadObj = check payloadJson.fromJsonString();
+    types:JwtPayload payload = check payloadObj.cloneWithType();
 
-    // Verify signature
-    byte[] secretBytes = jwtSecret.toBytes();
-    byte[]|crypto:Error expectedSignatureResult = crypto:hmacSha256(payloadBytes, secretBytes);
-    if expectedSignatureResult is crypto:Error {
-        return error("Signature verification failed");
-    }
-    byte[] expectedSignature = expectedSignatureResult;
-    string expectedEncodedSignature = encodeBase64(expectedSignature);
-
-    if encodedSignature != expectedEncodedSignature {
-        return error("Invalid token signature");
-    }
-
-    // Check expiration using proper time conversion
-    time:Utc currentTime = time:utcNow();
-    decimal currentSeconds = convertUtcToDecimal(currentTime);
-
-    if payload.exp < currentSeconds {
-        return error("Token has expired");
+    decimal nowSeconds = <decimal>time:utcNow()[0] + ((<decimal>time:utcNow()[1]) / 1000000000d);
+    if payload.exp < nowSeconds {
+        return error("Token expired");
     }
 
     return payload;
 }
 
-# Extract user info from token
+// === USER EXTRACTION FROM AUTH HEADER ===
+
 public isolated function extractUserFromToken(string authHeader) returns types:AuthenticatedUser|error {
-    // Extract token from "Bearer <token>" format
-    if !authHeader.startsWith("Bearer ") {
-        return error("Invalid authorization format");
+    string trimmedHeader = authHeader.trim();
+
+    if !trimmedHeader.startsWith("Bearer ") {
+        return error("Invalid Authorization header format");
     }
 
-    string token = authHeader.substring(7); // Remove "Bearer " prefix
-
-    // Validate JWT token
+    string token = trimmedHeader.substring(7).trim();
+    if token.length() == 0 {
+        return error("Token is empty");
+    }
     types:JwtPayload payload = check validateJwtToken(token);
 
     return {
@@ -229,86 +208,37 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
     };
 }
 
-# Validates HTTP Authorization header and extracts authenticated user
-#
-# + request - HTTP request containing Authorization header
-# + return - Authenticated user information or HTTP error response
-public isolated function validateAuthHeader(http:Request request) returns types:AuthenticatedUser|http:Unauthorized {
-    // Extract Authorization header
-    string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+// === AUTH HEADER VALIDATION (STANDARD) ===
+
+public isolated function validateAuthHeader(http:Request req) returns types:AuthenticatedUser|http:Unauthorized {
+    string|http:HeaderNotFoundError authHeader = req.getHeader("Authorization");
 
     if authHeader is http:HeaderNotFoundError {
-        return <http:Unauthorized>{
-            body: {
-                "error": "Authorization header required",
-                "message": "Please provide a valid JWT token in Authorization header"
-            }
-        };
+        return <http:Unauthorized>{body: {message: "Authorization header not found"}};
     }
 
-    // Extract and validate user from token
-    types:AuthenticatedUser|error authenticatedUser = extractUserFromToken(authHeader);
-
-    if authenticatedUser is error {
-        return <http:Unauthorized>{
-            body: {
-                "error": "Invalid or expired token",
-                "message": authenticatedUser.message()
-            }
-        };
+    types:AuthenticatedUser|error result = extractUserFromToken(authHeader);
+    if result is error {
+        return <http:Unauthorized>{body: {message: result.message()}};
     }
 
-    return authenticatedUser;
+    return result;
 }
 
-# Validates HTTP Authorization header with custom error response format
-# + request - HTTP request containing Authorization header
-# + customErrorBody - Custom error response body
-# + return - Authenticated user information or HTTP error response with custom body
-public isolated function validateAuthHeaderWithCustomError(http:Request request, json customErrorBody) returns types:AuthenticatedUser|http:Unauthorized {
-    // Extract Authorization header
-    string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+// === AUTH HEADER VALIDATION (WITH CUSTOM ERROR BODY) ===
+
+public isolated function validateAuthHeaderWithCustomError(http:Request req, json customError) returns types:AuthenticatedUser|http:Unauthorized {
+    string|http:HeaderNotFoundError authHeader = req.getHeader("Authorization");
 
     if authHeader is http:HeaderNotFoundError {
-        return <http:Unauthorized>{
-            body: customErrorBody
-        };
+        return <http:Unauthorized>{body: customError};
     }
 
-    // Extract and validate user from token
-    types:AuthenticatedUser|error authenticatedUser = extractUserFromToken(authHeader);
-
-    if authenticatedUser is error {
-        return <http:Unauthorized>{
-            body: customErrorBody
-        };
+    types:AuthenticatedUser|error result = extractUserFromToken(authHeader);
+    if result is error {
+        return <http:Unauthorized>{body: customError};
     }
 
-    return authenticatedUser;
-}
-
-# Helper function to convert time:Utc to decimal seconds
-isolated function convertUtcToDecimal(time:Utc utcTime) returns decimal {
-    // time:Utc is a tuple [int, decimal]
-    int integralSeconds = utcTime[0];
-    decimal fractionalSeconds = utcTime[1];
-    return <decimal>integralSeconds + fractionalSeconds;
-}
-
-# Helper function to find last index of a substring
-isolated function findLastIndexOf(string str, string substr) returns int? {
-    int? lastIndex = ();
-    int startIndex = 0;
-
-    while true {
-        int? currentIndex = str.indexOf(substr, startIndex);
-        if currentIndex is () {
-            break;
-        }
-        lastIndex = currentIndex;
-        startIndex = currentIndex + 1;
-    }
-
-    return lastIndex;
+    return result;
 }
 
