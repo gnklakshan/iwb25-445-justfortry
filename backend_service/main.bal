@@ -1,8 +1,11 @@
 import backend_service.auth;
 import backend_service.database;
+import backend_service.serviceFun;
 import backend_service.types;
 
 import ballerina/http;
+import ballerina/time;
+import ballerina/uuid;
 
 # Main service with authentication endpoints and protected resources
 service / on new http:Listener(9090) {
@@ -63,33 +66,19 @@ service / on new http:Listener(9090) {
     }
 
     # Protected database connectivity test endpoint
+    # Protected database connectivity test endpoint
     # Requires valid JWT token in Authorization header
     # + request - HTTP request with Authorization header
     # + return - JSON response with connection status or error
     isolated resource function get test\-db(http:Request request) returns json|http:InternalServerError|http:Unauthorized {
-        // Extract Authorization header
-        string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+        // Validate authorization header using utility function
+        types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
 
-        if authHeader is http:HeaderNotFoundError {
-            return <http:Unauthorized>{
-                body: {
-                    "error": "Authorization header required",
-                    "message": "Please provide a valid JWT token in Authorization header"
-                }
-            };
+        if authResult is http:Unauthorized {
+            return authResult;
         }
 
-        // Extract and validate user from token
-        types:AuthenticatedUser|error authenticatedUser = auth:extractUserFromToken(authHeader);
-
-        if authenticatedUser is error {
-            return <http:Unauthorized>{
-                body: {
-                    "error": "Invalid or expired token",
-                    "message": authenticatedUser.message()
-                }
-            };
-        }
+        types:AuthenticatedUser authenticatedUser = authResult;
 
         // Token is valid, proceed with database test
         record {|string status; int test_connection; string current_time;|}|error result = database:testConnection();
@@ -116,4 +105,36 @@ service / on new http:Listener(9090) {
 
         return responseWithUser;
     }
+
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + createAccountRequest - Account creation data
+    # + return - Account creation response or error
+    isolated resource function post accounts/create(http:Request request, types:CreateAccountRequest createAccountRequest) returns types:CreateAccountResponse|http:BadRequest|http:Unauthorized|http:InternalServerError {
+
+        createResult = serviceFun:createNewAccount(request, createAccountRequest);
+        if createResult is error {
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: "Failed to create account: " + createResult.message()
+                }
+            };
+        }
+
+        return {
+            success: true,
+                        userId: "",
+                        createdAt: "",
+                        updatedAt: ""
+                    }
+    }
+};
+}
+
+return {
+            success: true,
+            data: newAccount
+        } ;
+}
 }
