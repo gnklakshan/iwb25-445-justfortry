@@ -78,7 +78,7 @@ Retrieves a single account with its transactions.
 }
 ```
 
-### `POST /accounts`
+### `POST /accounts/create`
 
 Creates a new account.
 
@@ -86,9 +86,8 @@ Creates a new account.
 
 ```json
 {
-  "userId": "string",
   "name": "string",
-  "type": "string",
+  "accountType": "string",
   "balance": "number",
   "isDefault": "boolean"
 }
@@ -102,7 +101,7 @@ Creates a new account.
   "data": {
     "id": "string",
     "name": "string",
-    "type": "string",
+    "accountType": "string",
     "balance": "number",
     "isDefault": "boolean",
     "userId": "string",
