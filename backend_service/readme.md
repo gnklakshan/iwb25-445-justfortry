@@ -6,13 +6,13 @@
 
 Retrieves all accounts for a given user.
 
-**Request Body:**
+<!-- **Request Body:**
 
 ```json
 {
   "userId": "string"
 }
-```
+``` -->
 
 **Response:**
 
