@@ -9,16 +9,34 @@ import ballerina/uuid;
 # JWT secret key (in production, use a secure random key)
 configurable string jwtSecret = "your-secret-key-change-this-in-production";
 
+# error messages
+const string INVALID_CREDENTIALS = "Invalid email or password. Please check your credentials and try again.";
+const string AUTHENTICATION_REQUIRED = "Authentication required. Please provide a valid access token.";
+const string SESSION_EXPIRED = "Your session has expired. Please log in again.";
+const string INVALID_EMAIL_FORMAT = "Please enter a valid email address.";
+const string PASSWORD_TOO_SHORT = "Password must be at least 6 characters long.";
+const string USER_ALREADY_EXISTS = "An account with this email already exists. Please use a different email or try logging in.";
+const string ACCOUNT_CREATION_FAILED = "We couldn't create your account at this time. Please try again later.";
+const string LOGIN_FAILED = "Login failed. Please check your credentials and try again.";
+
 # Signup function using database
 public isolated function signupUser(types:SignupRequest signupRequest) returns types:AuthResponse|error {
     string email = signupRequest.email.trim();
     string password = signupRequest.password;
 
-    // Validate input
-    if !isValidEmail(email) || password.length() < 6 {
+    // Validate input with user-friendly messages
+    if !isValidEmail(email) {
         return {
             success: false,
-            message: "Email must be valid and password must be at least 6 characters",
+            message: INVALID_EMAIL_FORMAT,
+            token: ()
+        };
+    }
+
+    if password.length() < 6 {
+        return {
+            success: false,
+            message: PASSWORD_TOO_SHORT,
             token: ()
         };
     }
@@ -26,13 +44,13 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
     // Check if user already exists
     boolean|error userExists = database:emailExists(email);
     if userExists is error {
-        return error("Database error: " + userExists.message());
+        return error(ACCOUNT_CREATION_FAILED);
     }
 
     if userExists {
         return {
             success: false,
-            message: "User already exists",
+            message: USER_ALREADY_EXISTS,
             token: ()
         };
     }
@@ -57,12 +75,12 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
     // Save user to database
     error? createResult = database:createUser(newUser);
     if createResult is error {
-        return error("Failed to create user: " + createResult.message());
+        return error(ACCOUNT_CREATION_FAILED);
     }
 
     return {
         success: true,
-        message: "User created successfully",
+        message: "Account created successfully! You can now log in.",
         token: ()
     };
 }
@@ -72,11 +90,11 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     string email = loginRequest.email.trim();
     string password = loginRequest.password;
 
-    //validate  email
+    // Validate email format
     if !isValidEmail(email) {
         return {
             success: false,
-            message: "Email must be valid",
+            message: INVALID_EMAIL_FORMAT,
             token: ()
         };
     }
@@ -86,7 +104,7 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     if userResult is error {
         return {
             success: false,
-            message: "Invalid credentials",
+            message: INVALID_CREDENTIALS,
             token: ()
         };
     }
@@ -101,7 +119,7 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     if hashedPassword != user.hashedPassword {
         return {
             success: false,
-            message: "Invalid credentials",
+            message: INVALID_CREDENTIALS,
             token: ()
         };
     }
@@ -110,7 +128,7 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     string|error token = generateJwtToken(user);
 
     if token is error {
-        return error("Failed to generate token: " + token.message());
+        return error(LOGIN_FAILED);
     }
 
     return {
@@ -158,7 +176,7 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
     string[] parts = dotPattern.split(token);
 
     if parts.length() != 3 {
-        return error("Authentication failed: Invalid token format");
+        return error(AUTHENTICATION_REQUIRED);
     }
 
     string headerEncoded = parts[0];
@@ -171,7 +189,7 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
     string expectedSigEncoded = check encodeBase64Url(expectedSig);
 
     if signatureEncoded != expectedSigEncoded {
-        return error("Signature mismatch");
+        return error(AUTHENTICATION_REQUIRED);
     }
 
     byte[] payloadBytes = check decodeBase64Url(payloadEncoded);
@@ -181,7 +199,7 @@ public isolated function validateJwtToken(string token) returns types:JwtPayload
 
     decimal nowSeconds = <decimal>time:utcNow()[0] + ((<decimal>time:utcNow()[1]) / 1000000000d);
     if payload.exp < nowSeconds {
-        return error("Token expired");
+        return error(SESSION_EXPIRED);
     }
 
     return payload;
@@ -193,12 +211,12 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
     string trimmedHeader = authHeader.trim();
 
     if !trimmedHeader.startsWith("Bearer ") {
-        return error("Invalid Authorization header format");
+        return error(AUTHENTICATION_REQUIRED);
     }
 
     string token = trimmedHeader.substring(7).trim();
     if token.length() == 0 {
-        return error("Token is empty");
+        return error(AUTHENTICATION_REQUIRED);
     }
     types:JwtPayload payload = check validateJwtToken(token);
 
@@ -214,12 +232,30 @@ public isolated function validateAuthHeader(http:Request req) returns types:Auth
     string|http:HeaderNotFoundError authHeader = req.getHeader("Authorization");
 
     if authHeader is http:HeaderNotFoundError {
-        return <http:Unauthorized>{body: {message: "Authorization header not found"}};
+        return <http:Unauthorized>{
+            body: {
+                success: false,
+                message: AUTHENTICATION_REQUIRED
+            }
+        };
     }
 
     types:AuthenticatedUser|error result = extractUserFromToken(authHeader);
     if result is error {
-        return <http:Unauthorized>{body: {message: result.message()}};
+        string errorMessage = result.message();
+        // Map technical errors to user-friendly messages
+        if errorMessage.includes("expired") || errorMessage == SESSION_EXPIRED {
+            errorMessage = SESSION_EXPIRED;
+        } else {
+            errorMessage = AUTHENTICATION_REQUIRED;
+        }
+
+        return <http:Unauthorized>{
+            body: {
+                success: false,
+                message: errorMessage
+            }
+        };
     }
 
     return result;
@@ -241,4 +277,3 @@ public isolated function validateAuthHeaderWithCustomError(http:Request req, jso
 
     return result;
 }
-

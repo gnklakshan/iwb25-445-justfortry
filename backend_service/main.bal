@@ -24,7 +24,7 @@ service / on new http:Listener(9090) {
         }
 
         if !result.success {
-            if result.message == "User already exists" {
+            if result.message.includes("already exists") {
                 return <http:Conflict>{
                     body: result
                 };
@@ -83,20 +83,24 @@ service / on new http:Listener(9090) {
         if result is error {
             return <http:InternalServerError>{
                 body: {
-                    "error": "Database connection failed",
-                    "message": result.message()
+                    "success": false,
+                    "message": "Unable to connect to the database. "
                 }
             };
         }
 
         // Create response with authenticated user info
         json responseWithUser = {
-            "status": result.status,
-            "test_connection": result.test_connection,
-            "current_time": result.current_time,
-            "authenticated_user": {
-                "user_id": authenticatedUser.userId,
-                "username": authenticatedUser.email
+            "success": true,
+            "message": "Database connection successful",
+            "data": {
+                "status": result.status,
+                "test_connection": result.test_connection,
+                "current_time": result.current_time,
+                "authenticated_user": {
+                    "user_id": authenticatedUser.userId,
+                    "username": authenticatedUser.email
+                }
             }
         };
 
@@ -113,6 +117,19 @@ service / on new http:Listener(9090) {
         types:CreateAccountResponse|error createResult = serviceFun:createNewAccount(request, createAccountRequest);
 
         if createResult is error {
+            string errorMessage = createResult.message();
+
+            // Check if it's an authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            // Generic error for other issues
             return <http:InternalServerError>{
                 body: {
                     success: false,
