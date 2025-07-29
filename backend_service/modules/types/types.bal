@@ -51,10 +51,12 @@ public type AuthenticatedUser record {|
 
 // Account module types__________________________________________________________
 
+public type AccountType "SAVINGS"|"CURRENT"|"CREDIT";
+
 public type Account record {|
     string id;
     string name;
-    string accountType;
+    AccountType accountType;
     decimal balance;
     boolean isDefault;
     string userId;
@@ -63,7 +65,7 @@ public type Account record {|
 
 public type CreateAccountRequest record {|
     string name;
-    string accountType;
+    AccountType accountType;
     decimal balance;
     boolean isDefault;
 |};

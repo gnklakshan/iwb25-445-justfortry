@@ -246,7 +246,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "oauth2"
-version = "2.14.0"
+version = "2.14.1"
 dependencies = [
 	{org = "ballerina", name = "cache"},
 	{org = "ballerina", name = "crypto"},
@@ -390,6 +390,7 @@ modules = [
 	{org = "user", packageName = "backend_service", moduleName = "backend_service"},
 	{org = "user", packageName = "backend_service", moduleName = "backend_service.auth"},
 	{org = "user", packageName = "backend_service", moduleName = "backend_service.database"},
+	{org = "user", packageName = "backend_service", moduleName = "backend_service.serviceFun"},
 	{org = "user", packageName = "backend_service", moduleName = "backend_service.types"}
 ]
 

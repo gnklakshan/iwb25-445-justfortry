@@ -17,15 +17,6 @@ final jdbc:Client dbClient = checkpanic new (
     password = dbPassword
 );
 
-// # Initialize JDBC client with configuration
-// isolated function getDbClient() returns jdbc:Client|error {
-//     return new (
-//         url = string `jdbc:postgresql://${dbHost}:${dbPort}/${dbName}`,
-//         user = dbUsername,
-//         password = dbPassword
-//     );
-// }
-
 # Test database connectivity
 # + return - Connection status record or error
 public isolated function testConnection() returns record {|string status; int test_connection; string current_time;|}|error {
@@ -49,10 +40,11 @@ public isolated function testConnection() returns record {|string status; int te
 # + user - User data to insert
 # + return - Success status or error
 public isolated function createUser(types:User user) returns error? {
+    string userName = user.name ?: "";
 
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO users (id, email, name, hashedPassword, createdAt, updatedAt)
-        VALUES (${user.id}, ${user.email}, ${user.name}, ${user.hashedPassword}, ${user.createdAt}, ${user.updatedAt})
+        VALUES (${user.id}, ${user.email}, ${userName}, ${user.hashedPassword}, ${user.createdAt}, ${user.updatedAt})
     `);
 
     if result is sql:Error {
@@ -112,7 +104,6 @@ public isolated function getUserByEmail(string email) returns types:User|error {
 //         updatedAt: result.updated_at
 //     };
 // }
-
 # Check if email exists in database
 # + email - email to check
 # + return - True if exists, false otherwise, or error
