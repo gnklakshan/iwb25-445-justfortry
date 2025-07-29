@@ -91,3 +91,4 @@ isolated function encodeBase64(byte[] input) returns string {
 
     return result;
 }
+

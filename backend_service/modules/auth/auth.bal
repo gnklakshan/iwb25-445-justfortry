@@ -2,6 +2,7 @@ import backend_service.database;
 import backend_service.types;
 
 import ballerina/crypto;
+import ballerina/http;
 import ballerina/time;
 import ballerina/uuid;
 
@@ -226,6 +227,64 @@ public isolated function extractUserFromToken(string authHeader) returns types:A
         userId: payload.sub,
         email: payload.email
     };
+}
+
+# Validates HTTP Authorization header and extracts authenticated user
+#
+# + request - HTTP request containing Authorization header
+# + return - Authenticated user information or HTTP error response
+public isolated function validateAuthHeader(http:Request request) returns types:AuthenticatedUser|http:Unauthorized {
+    // Extract Authorization header
+    string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+
+    if authHeader is http:HeaderNotFoundError {
+        return <http:Unauthorized>{
+            body: {
+                "error": "Authorization header required",
+                "message": "Please provide a valid JWT token in Authorization header"
+            }
+        };
+    }
+
+    // Extract and validate user from token
+    types:AuthenticatedUser|error authenticatedUser = extractUserFromToken(authHeader);
+
+    if authenticatedUser is error {
+        return <http:Unauthorized>{
+            body: {
+                "error": "Invalid or expired token",
+                "message": authenticatedUser.message()
+            }
+        };
+    }
+
+    return authenticatedUser;
+}
+
+# Validates HTTP Authorization header with custom error response format
+# + request - HTTP request containing Authorization header
+# + customErrorBody - Custom error response body
+# + return - Authenticated user information or HTTP error response with custom body
+public isolated function validateAuthHeaderWithCustomError(http:Request request, json customErrorBody) returns types:AuthenticatedUser|http:Unauthorized {
+    // Extract Authorization header
+    string|http:HeaderNotFoundError authHeader = request.getHeader("Authorization");
+
+    if authHeader is http:HeaderNotFoundError {
+        return <http:Unauthorized>{
+            body: customErrorBody
+        };
+    }
+
+    // Extract and validate user from token
+    types:AuthenticatedUser|error authenticatedUser = extractUserFromToken(authHeader);
+
+    if authenticatedUser is error {
+        return <http:Unauthorized>{
+            body: customErrorBody
+        };
+    }
+
+    return authenticatedUser;
 }
 
 # Helper function to convert time:Utc to decimal seconds
