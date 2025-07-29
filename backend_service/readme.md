@@ -6,35 +6,6 @@
 
 Retrieves all accounts for a given user.
 
-<!-- **Request Body:**
-
-```json
-{
-  "userId": "string"
-}
-``` -->
-
-**Response:**
-
-```json
-[
-  {
-    "id": "string",
-    "name": "string",
-    "AccountType": "string",
-    "balance": "number",
-    "isDefault": "boolean",
-    "userId": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  }
-]
-```
-
-### `GET /accounts/:id`
-
-Retrieves a single account with its transactions.
-
 **Request Body:**
 
 ```json
@@ -46,6 +17,35 @@ Retrieves a single account with its transactions.
 **Response:**
 
 ```json
+[
+  {
+    "id": "string",
+    "name": "string",
+    "type": "string",
+    "balance": "number",
+    "isDefault": "boolean",
+    "userId": "string",
+    "createdAt": "string",
+    "updatedAt": "string"
+  }
+]
+```
+
+### `GET /accounts/{accountId}`
+
+Retrieves a single account with its transactions.
+
+**Request Body:**
+
+<!-- ```json
+{
+  "userId": "string"
+}
+``` -->
+
+**Response:**
+
+```json
 {
   "id": "string",
   "name": "string",
@@ -53,8 +53,6 @@ Retrieves a single account with its transactions.
   "balance": "number",
   "isDefault": "boolean",
   "userId": "string",
-  "createdAt": "string",
-  "updatedAt": "string",
   "transactions": [
     {
       "id": "string",
