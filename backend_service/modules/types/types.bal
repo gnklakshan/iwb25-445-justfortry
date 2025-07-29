@@ -51,7 +51,7 @@ public type AuthenticatedUser record {|
 
 // Account module types__________________________________________________________
 
-public type AccountType "SAVINGS"|"CURRENT"|"CREDIT";
+public type AccountType "CURRENT"|"SAVINGS"|"CREDIT"|"LOAN";
 
 public type Account record {|
     string id;
