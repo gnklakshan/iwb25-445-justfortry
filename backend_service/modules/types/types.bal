@@ -113,3 +113,19 @@ public type AccountWithTransactionsResponse record {|
     string userId;
     Transaction[] transactions;
 |};
+
+type TransactionStatus "PENDING"|"COMPLETED"|"FAILED";
+
+type newTransactionRequest record {|
+    string accountId;
+    string transactionType;
+    string amount;
+    string description;
+    string date;
+    string category;
+    string isRecurring;
+    string recurringInterval;
+    string receiptUrl;
+    string lastProcessed;
+    TransactionStatus transactionStatus;
+|};

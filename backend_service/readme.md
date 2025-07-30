@@ -238,14 +238,17 @@ Creates a new transaction.
 
 ```json
 {
-  "userId": "string",
+  "accountId": "string",
   "transactionType": "string",
   "amount": "number",
   "description": "string",
   "date": "string",
   "category": "string",
   "isRecurring": "boolean",
-  "recurringInterval": "string"
+  "recurringInterval": "string",
+  "receiptUrl":"string",
+  "lastProcessed":"date"
+  "transactionStatus": 'PENDING'| 'COMPLETED'|'FAILED'
 }
 ```
 
