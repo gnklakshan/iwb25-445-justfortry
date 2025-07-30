@@ -127,3 +127,46 @@ public isolated function getAccountsByUserId(string userId) returns types:Accoun
     check accountStream.close();
     return accountResponses;
 }
+
+# Get account by ID and user ID from database
+# + accountId - Account ID to search for
+# + userId - User ID to verify ownership
+# + return - Account record or error if not found
+public isolated function getAccountById(string accountId, string userId) returns types:AccountResponse|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT id, name, accountType, balance, isDefault, userId
+        FROM accounts
+        WHERE id = ${accountId} AND userId = ${userId}
+    `;
+
+    types:AccountResponse|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Account not found or database error: " + result.message());
+    }
+
+    return result;
+}
+
+# Get transactions by account ID and user ID from database
+# + accountId - Account ID to search for
+# + userId - User ID to verify ownership
+# + return - Array of Transaction records or error
+public isolated function getTransactionsByAccountId(string accountId, string userId) returns types:Transaction[]|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT id, transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval, nextRecurringDate, lastProcessed, status, userId, accountId, createdAt, updatedAt
+        FROM transactions
+        WHERE accountId = ${accountId} AND userId = ${userId}
+    `;
+
+    stream<types:Transaction, sql:Error?> transactionStream = dbClient->query(selectQuery);
+    types:Transaction[] transactions = [];
+
+    check from types:Transaction txn in transactionStream
+        do {
+            transactions.push(txn);
+        };
+
+    check transactionStream.close();
+    return transactions;
+}
