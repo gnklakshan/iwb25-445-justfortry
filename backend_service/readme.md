@@ -126,16 +126,7 @@ Updates the default account for a user.
 ```json
 {
   "success": "boolean",
-  "data": {
-    "id": "string",
-    "name": "string",
-    "accountType": "string",
-    "balance": "number",
-    "isDefault": "boolean",
-    "userId": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  }
+  "message": "string"
 }
 ```
 
@@ -248,7 +239,7 @@ Creates a new transaction.
 ```json
 {
   "userId": "string",
-  "type": "string",
+  "transactionType": "string",
   "amount": "number",
   "description": "string",
   "date": "string",
