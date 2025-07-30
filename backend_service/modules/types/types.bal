@@ -85,8 +85,7 @@ public type AccountResponse record {|
 |};
 
 //transaction types__________________________________________________________
-
-type Transaction record {|
+public type Transaction record {|
     string id;
     string transactionType;
     string amount;
@@ -102,4 +101,15 @@ type Transaction record {|
     string userId;
     string accountId;
     *timeMetadata;
+|};
+
+# Account with transactions response 
+public type AccountWithTransactionsResponse record {|
+    string id;
+    string name;
+    string accountType;
+    string balance;
+    string isDefault;
+    string userId;
+    Transaction[] transactions;
 |};
