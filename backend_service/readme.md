@@ -109,7 +109,7 @@ Creates a new account.
 }
 ```
 
-### `PUT /accounts/:id/default`
+### `PUT /accounts/{accountId}/default`
 
 Updates the default account for a user.
 
@@ -117,7 +117,7 @@ Updates the default account for a user.
 
 ```json
 {
-  "userId": "string"
+  "isDefault": "boolean"
 }
 ```
 
