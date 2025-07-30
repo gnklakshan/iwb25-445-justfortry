@@ -213,4 +213,35 @@ service / on new http:Listener(9090) {
 
         return response;
     }
+
+    //update account status
+    isolated resource function patch accounts/[string accountId]/default(http:Request request, boolean isDefault) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        map<anydata>|error accountResult = serviceFun:updateAccountStatus(request, accountId, isDefault);
+
+        if accountResult is error {
+            string errorMessage = accountResult.message();
+
+            //  authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            //error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        json response = accountResult.toJson();
+
+        return response;
+    }
 }

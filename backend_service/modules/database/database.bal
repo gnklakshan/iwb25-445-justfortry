@@ -170,3 +170,16 @@ public isolated function getTransactionsByAccountId(string accountId, string use
     check transactionStream.close();
     return transactions;
 }
+
+public isolated function updateAccountStatus(string accountId, string userId, boolean isDefault) returns error? {
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        UPDATE accounts
+        SET isDefault = ${isDefault}
+        WHERE id = ${accountId} AND userId = ${userId}
+    `);
+
+    if result is sql:Error {
+        return error("Failed to update account status: " + result.message());
+    }
+    return;
+}

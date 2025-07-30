@@ -136,3 +136,27 @@ public isolated function getAccountWithTransactions(http:Request request, string
         transactions: transactions
     };
 }
+
+//update account status
+public isolated function updateAccountStatus(http:Request request, string accountId, boolean isDefault) returns error|map<anydata> {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to update account status");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // Update account status in database
+    error? updateResult = database:updateAccountStatus(accountId, userId, isDefault);
+    if updateResult is error {
+        return error("Failed to update account status. " + updateResult.message());
+    }
+
+    return {
+        success: true,
+        message: "Account status updated successfully"
+    };
+}
