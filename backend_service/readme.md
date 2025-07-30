@@ -109,7 +109,7 @@ Creates a new account.
 }
 ```
 
-### `PUT /accounts/{accountId}/default`
+### `PATCH /accounts/{accountId}/default`
 
 Updates the default account for a user.
 
@@ -245,7 +245,7 @@ Creates a new transaction.
   "date": "string",
   "category": "string",
   "isRecurring": "boolean",
-  "recurringInterval": "string",
+  "recurringInterval": "int", - indays
   "receiptUrl":"string",
   "lastProcessed":"date"
   "transactionStatus": 'PENDING'| 'COMPLETED'|'FAILED'

@@ -94,7 +94,7 @@ public type Transaction record {|
     string category;
     string receiptUrl;
     string isRecurring;
-    string recurringInterval;
+    int recurringInterval;
     string nextRecurringDate;
     string lastProcessed;
     string status;
@@ -114,9 +114,9 @@ public type AccountWithTransactionsResponse record {|
     Transaction[] transactions;
 |};
 
-type TransactionStatus "PENDING"|"COMPLETED"|"FAILED";
+public type TransactionStatus "PENDING"|"COMPLETED"|"FAILED";
 
-type newTransactionRequest record {|
+public type NewTransactionRequest record {|
     string accountId;
     string transactionType;
     string amount;
@@ -124,7 +124,7 @@ type newTransactionRequest record {|
     string date;
     string category;
     string isRecurring;
-    string recurringInterval;
+    int recurringInterval;
     string receiptUrl;
     string lastProcessed;
     TransactionStatus transactionStatus;
