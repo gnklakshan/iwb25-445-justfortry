@@ -195,3 +195,15 @@ public isolated function updateAccountStatus(string accountId, string userId, bo
     }
     return;
 }
+
+public isolated function addTransaction(types:Transaction trans) returns error? {
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        INSERT INTO transactions (id, transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval, nextRecurringDate, lastProcessed, status, userId, accountId, createdAt, updatedAt)
+        VALUES (${trans.id}, ${trans.transactionType}, ${trans.amount}, ${trans.description}, ${trans.date}, ${trans.category}, ${trans.receiptUrl}, ${trans.isRecurring}, ${trans.recurringInterval}, ${trans.nextRecurringDate}, ${trans.lastProcessed}, ${trans.status}, ${trans.userId}, ${trans.accountId}, ${trans.createdAt}, ${trans.updatedAt})
+    `);
+
+    if result is sql:Error {
+        return error("Failed to add transaction: " + result.message());
+    }
+    return;
+}

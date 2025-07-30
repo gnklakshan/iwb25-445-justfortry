@@ -244,4 +244,37 @@ service / on new http:Listener(9090) {
 
         return response;
     }
+
+    isolated resource function post transactions(http:Request request, types:NewTransactionRequest newTransaction) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:Transaction|error addResult = serviceFun:createNewTransaction(request, newTransaction);
+
+        if addResult is error {
+            string errorMessage = addResult.message();
+
+            // authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            //  error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        json response = {
+            "success": true,
+            "data": addResult.toJson()
+        };
+
+        return response;
+    }
 }

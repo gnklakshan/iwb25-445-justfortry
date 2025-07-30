@@ -109,7 +109,7 @@ Creates a new account.
 }
 ```
 
-### `PUT /accounts/{accountId}/default`
+### `PATCH /accounts/{accountId}/default`
 
 Updates the default account for a user.
 
@@ -126,16 +126,7 @@ Updates the default account for a user.
 ```json
 {
   "success": "boolean",
-  "data": {
-    "id": "string",
-    "name": "string",
-    "accountType": "string",
-    "balance": "number",
-    "isDefault": "boolean",
-    "userId": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  }
+  "message": "string"
 }
 ```
 
@@ -247,14 +238,17 @@ Creates a new transaction.
 
 ```json
 {
-  "userId": "string",
-  "type": "string",
+  "accountId": "string",
+  "transactionType": "string",
   "amount": "number",
   "description": "string",
   "date": "string",
   "category": "string",
   "isRecurring": "boolean",
-  "recurringInterval": "string"
+  "recurringInterval": "int", - indays
+  "receiptUrl":"string",
+  "lastProcessed":"date"
+  "transactionStatus": 'PENDING'| 'COMPLETED'|'FAILED'
 }
 ```
 

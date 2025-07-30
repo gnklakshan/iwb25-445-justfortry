@@ -160,3 +160,54 @@ public isolated function updateAccountStatus(http:Request request, string accoun
         message: "Account status updated successfully"
     };
 }
+
+public isolated function createNewTransaction(http:Request request, types:NewTransactionRequest newTransaction) returns types:Transaction|error {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to create a transaction");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+
+    // Generate transaction ID and timestamps
+    string transactionId = uuid:createType1AsString();
+    time:Utc currentTime = time:utcNow();
+
+    // Calculate next recurring date if applicable
+    string nextRecurringDateStr = "";
+    if newTransaction.isRecurring == "true" && newTransaction.recurringInterval > 0 {
+
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * newTransaction.recurringInterval);
+        nextRecurringDateStr = time:utcToString(nextRecurringDate);
+    }
+
+    // Create transaction record
+    types:Transaction newTransactionData = {
+        id: transactionId,
+        transactionType: newTransaction.transactionType,
+        amount: newTransaction.amount,
+        description: newTransaction.description,
+        date: newTransaction.date,
+        category: newTransaction.category,
+        receiptUrl: newTransaction.receiptUrl,
+        isRecurring: newTransaction.isRecurring,
+        recurringInterval: newTransaction.recurringInterval,
+        nextRecurringDate: nextRecurringDateStr,
+        lastProcessed: time:utcToString(currentTime),
+        status: newTransaction.transactionStatus,
+        userId: authenticatedUser.userId,
+        accountId: newTransaction.accountId,
+        createdAt: currentTime,
+        updatedAt: currentTime
+    };
+
+    // Save transaction to database
+    error? createResult = database:addTransaction(newTransactionData);
+    if createResult is error {
+        return error("Transaction creation failed. Please try again later.");
+    }
+
+    return newTransactionData;
+}
