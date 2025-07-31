@@ -177,7 +177,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
 
     // Calculate next recurring date if applicable
     string nextRecurringDateStr = "";
-    if newTransaction.isRecurring == "true" && newTransaction.recurringInterval > 0 {
+    if newTransaction.isRecurring == true && newTransaction.recurringInterval > 0 {
 
         time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * newTransaction.recurringInterval);
         nextRecurringDateStr = time:utcToString(nextRecurringDate);

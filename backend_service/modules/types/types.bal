@@ -79,8 +79,8 @@ public type AccountResponse record {|
     string id;
     string name;
     string accountType;
-    string balance;
-    string isDefault;
+    decimal balance;
+    boolean isDefault;
     string userId;
 |};
 
@@ -88,12 +88,12 @@ public type AccountResponse record {|
 public type Transaction record {|
     string id;
     string transactionType;
-    string amount;
+    decimal amount;
     string description;
     string date;
     string category;
     string receiptUrl;
-    string isRecurring;
+    boolean isRecurring;
     int recurringInterval;
     string nextRecurringDate;
     string lastProcessed;
@@ -108,8 +108,8 @@ public type AccountWithTransactionsResponse record {|
     string id;
     string name;
     string accountType;
-    string balance;
-    string isDefault;
+    decimal balance;
+    boolean isDefault;
     string userId;
     Transaction[] transactions;
 |};
@@ -119,11 +119,11 @@ public type TransactionStatus "PENDING"|"COMPLETED"|"FAILED";
 public type NewTransactionRequest record {|
     string accountId;
     string transactionType;
-    string amount;
+    decimal amount;
     string description;
     string date;
     string category;
-    string isRecurring;
+    boolean isRecurring;
     int recurringInterval;
     string receiptUrl;
     string lastProcessed;
