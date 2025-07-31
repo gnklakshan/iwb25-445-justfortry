@@ -1,6 +1,7 @@
 import backend_service.types;
 
 import ballerina/sql;
+import ballerina/time;
 import ballerinax/java.jdbc as jdbc;
 
 # Database configuration - these will be read from Config.toml or environment variables
@@ -40,11 +41,13 @@ public isolated function testConnection() returns record {|string status; int te
 # + user - User data to insert
 # + return - Success status or error
 public isolated function createUser(types:User user) returns error? {
-    string userName = user.name ?: "";
+
+    string createdAtStr = time:utcToString(user.createdAt);
+    string updatedAtStr = time:utcToString(user.updatedAt);
 
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO users (id, email, name, hashedPassword, createdAt, updatedAt)
-        VALUES (${user.id}, ${user.email}, ${userName}, ${user.hashedPassword}, ${user.createdAt}, ${user.updatedAt})
+        VALUES (${user.id}, ${user.email}, ${user.name}, ${user.hashedPassword}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
     `);
 
     if result is sql:Error {
@@ -95,9 +98,12 @@ public isolated function emailExists(string email) returns boolean|error {
 # + account - Account data to insert
 # + return - Success status or error
 public isolated function createAccount(types:Account account) returns error? {
+    string createdAtStr = time:utcToString(account.createdAt);
+    string updatedAtStr = time:utcToString(account.updatedAt);
+
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO accounts (id, name, accountType, balance, isDefault, userId, createdAt, updatedAt)
-        VALUES (${account.id}, ${account.name}, ${account.accountType}, ${account.balance}, ${account.isDefault}, ${account.userId}, ${account.createdAt}, ${account.updatedAt})
+        VALUES (${account.id}, ${account.name}, ${account.accountType}, ${account.balance}, ${account.isDefault}, ${account.userId}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
     `);
 
     if result is sql:Error {
@@ -197,9 +203,15 @@ public isolated function updateAccountStatus(string accountId, string userId, bo
 }
 
 public isolated function addTransaction(types:Transaction trans) returns error? {
+    string createdAtStr = time:utcToString(trans.createdAt);
+    string updatedAtStr = time:utcToString(trans.updatedAt);
+
+    // Handle nullable recurringInterval
+    string? recurringIntervalStr = trans.recurringInterval;
+
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO transactions (id, transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval, nextRecurringDate, lastProcessed, status, userId, accountId, createdAt, updatedAt)
-        VALUES (${trans.id}, ${trans.transactionType}, ${trans.amount}, ${trans.description}, ${trans.date}, ${trans.category}, ${trans.receiptUrl}, ${trans.isRecurring}, ${trans.recurringInterval}, ${trans.nextRecurringDate}, ${trans.lastProcessed}, ${trans.status}, ${trans.userId}, ${trans.accountId}, ${trans.createdAt}, ${trans.updatedAt})
+        VALUES (${trans.id}, ${trans.transactionType}::transactiontype, ${trans.amount}, ${trans.description}, ${trans.date}::timestamp, ${trans.category}, ${trans.receiptUrl}, ${trans.isRecurring}, ${recurringIntervalStr}::recurringinterval, ${trans.nextRecurringDate}::timestamp, ${trans.lastProcessed}::timestamp, ${trans.status}::transactionstatus, ${trans.userId}, ${trans.accountId}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
     `);
 
     if result is sql:Error {

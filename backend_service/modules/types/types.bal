@@ -53,6 +53,8 @@ public type AuthenticatedUser record {|
 
 public type AccountType "CURRENT"|"SAVINGS"|"CREDIT"|"LOAN";
 
+public type RecurringInterval "DAILY"|"WEEKLY"|"MONTHLY"|"YEARLY";
+
 public type Account record {|
     string id;
     string name;
@@ -94,7 +96,7 @@ public type Transaction record {|
     string category;
     string receiptUrl;
     boolean isRecurring;
-    int recurringInterval;
+    RecurringInterval? recurringInterval;
     string nextRecurringDate;
     string lastProcessed;
     string status;
@@ -124,7 +126,7 @@ public type NewTransactionRequest record {|
     string date;
     string category;
     boolean isRecurring;
-    int recurringInterval;
+    RecurringInterval? recurringInterval;
     string receiptUrl;
     string lastProcessed;
     TransactionStatus transactionStatus;

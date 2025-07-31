@@ -177,9 +177,22 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
 
     // Calculate next recurring date if applicable
     string nextRecurringDateStr = "";
-    if newTransaction.isRecurring == true && newTransaction.recurringInterval > 0 {
+    if newTransaction.isRecurring == true && newTransaction.recurringInterval is types:RecurringInterval {
+        types:RecurringInterval interval = <types:RecurringInterval>newTransaction.recurringInterval;
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * newTransaction.recurringInterval);
+        // Calculate days based on interval type
+        int daysToAdd = 0;
+        if interval == "DAILY" {
+            daysToAdd = 1;
+        } else if interval == "WEEKLY" {
+            daysToAdd = 7;
+        } else if interval == "MONTHLY" {
+            daysToAdd = 30;
+        } else if interval == "YEARLY" {
+            daysToAdd = 365;
+        }
+
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     }
 
@@ -206,7 +219,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
     // Save transaction to database
     error? createResult = database:addTransaction(newTransactionData);
     if createResult is error {
-        return error("Transaction creation failed. Please try again later.");
+        return error("Transaction creation failed: " + createResult.message());
     }
 
     return newTransactionData;
