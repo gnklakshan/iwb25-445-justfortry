@@ -160,7 +160,23 @@ public isolated function getAccountById(string accountId, string userId) returns
 # + return - Array of Transaction records or error
 public isolated function getTransactionsByAccountId(string accountId, string userId) returns types:Transaction[]|error {
     sql:ParameterizedQuery selectQuery = `
-        SELECT id, transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval, nextRecurringDate, lastProcessed, status, userId, accountId, createdAt, updatedAt
+        SELECT 
+            id, 
+            transactionType::text as transactionType, 
+            amount, 
+            description, 
+            date, 
+            category, 
+            receiptUrl, 
+            isRecurring, 
+            recurringInterval::text as recurringInterval, 
+            nextRecurringDate, 
+            lastProcessed, 
+            status::text as status, 
+            userId, 
+            accountId, 
+            createdAt, 
+            updatedAt
         FROM transactions
         WHERE accountId = ${accountId} AND userId = ${userId}
     `;

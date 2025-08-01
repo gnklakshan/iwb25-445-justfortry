@@ -96,7 +96,7 @@ public type Transaction record {|
     string category;
     string receiptUrl;
     boolean isRecurring;
-    RecurringInterval? recurringInterval;
+    string? recurringInterval;
     string nextRecurringDate;
     string lastProcessed;
     string status;

@@ -115,12 +115,14 @@ public isolated function getAccountWithTransactions(http:Request request, string
 
     // Fetch account from database
     types:AccountResponse|error accountResult = database:getAccountById(accountId, userId);
+    if accountResult is error {
+        return error("Failed to fetch account. " + accountResult.message());
+    }
 
     // Fetch transactions for the account
     types:Transaction[]|error transactionsResult = database:getTransactionsByAccountId(accountId, userId);
-
-    if accountResult is error || transactionsResult is error {
-        return error("Failed to fetch account or transactions. ");
+    if transactionsResult is error {
+        return error("Failed to fetch transactions. " + transactionsResult.message());
     }
 
     types:AccountResponse account = accountResult;
