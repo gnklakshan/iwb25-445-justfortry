@@ -270,3 +270,35 @@ public isolated function fetchAllTransactionOfUser(string userId) returns types:
     check transactionStream.close();
     return transactions;
 }
+
+public isolated function fetchTransactionById(string transactionId, string userId) returns types:Transaction|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT 
+            id, 
+            transactionType::text as transactionType, 
+            amount, 
+            description, 
+            date, 
+            category, 
+            receiptUrl, 
+            isRecurring, 
+            recurringInterval::text as recurringInterval, 
+            nextRecurringDate, 
+            lastProcessed, 
+            status::text as status, 
+            userId, 
+            accountId, 
+            createdAt, 
+            updatedAt
+        FROM transactions
+        WHERE id = ${transactionId} AND userId = ${userId}
+    `;
+
+    types:Transaction|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Transaction not found or database error: " + result.message());
+    }
+
+    return result;
+}

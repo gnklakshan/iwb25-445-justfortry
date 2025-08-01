@@ -248,6 +248,37 @@ service / on new http:Listener(9090) {
         return response;
     }
 
+    //get single transaction by ID
+    isolated resource function get transactions/[string transactionId](http:Request request) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:Transaction|error transactionResult = serviceFun:getTransactionById(request, transactionId);
+
+        if transactionResult is error {
+            string errorMessage = transactionResult.message();
+
+            // an authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            //  error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        json response = transactionResult.toJson();
+
+        return response;
+    }
+
     //update account status
     isolated resource function patch accounts/[string accountId](http:Request request, boolean isDefault) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         map<anydata>|error accountResult = serviceFun:updateAccountStatus(request, accountId, isDefault);
