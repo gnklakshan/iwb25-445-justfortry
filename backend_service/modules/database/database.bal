@@ -235,3 +235,38 @@ public isolated function addTransaction(types:Transaction trans) returns error? 
     }
     return;
 }
+
+public isolated function fetchAllTransactionOfUser(string userId) returns types:Transaction[]|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT 
+            id, 
+            transactionType::text as transactionType, 
+            amount, 
+            description, 
+            date, 
+            category, 
+            receiptUrl, 
+            isRecurring, 
+            recurringInterval::text as recurringInterval, 
+            nextRecurringDate, 
+            lastProcessed, 
+            status::text as status, 
+            userId, 
+            accountId, 
+            createdAt, 
+            updatedAt
+        FROM transactions
+        WHERE userId = ${userId}
+    `;
+
+    stream<types:Transaction, sql:Error?> transactionStream = dbClient->query(selectQuery);
+    types:Transaction[] transactions = [];
+
+    check from types:Transaction txn in transactionStream
+        do {
+            transactions.push(txn);
+        };
+
+    check transactionStream.close();
+    return transactions;
+}
