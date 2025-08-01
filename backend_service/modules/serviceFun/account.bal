@@ -226,3 +226,25 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
 
     return newTransactionData;
 }
+
+public isolated function getAllTransactionOfUser(http:Request request) returns types:Transaction[]|error {
+    // Validate authorization header 
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to fetch account");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // Fetch all transactions from database
+    types:Transaction[]|error allTransactons = database:fetchAllTransactionOfUser(userId);
+
+    if allTransactons is error {
+        return error("Failed to fetch transactions. " + allTransactons.message());
+    }
+
+    return allTransactons;
+
+}
