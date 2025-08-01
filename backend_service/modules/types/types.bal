@@ -53,6 +53,8 @@ public type AuthenticatedUser record {|
 
 public type AccountType "CURRENT"|"SAVINGS"|"CREDIT"|"LOAN";
 
+public type RecurringInterval "DAILY"|"WEEKLY"|"MONTHLY"|"YEARLY";
+
 public type Account record {|
     string id;
     string name;
@@ -79,8 +81,8 @@ public type AccountResponse record {|
     string id;
     string name;
     string accountType;
-    string balance;
-    string isDefault;
+    decimal balance;
+    boolean isDefault;
     string userId;
 |};
 
@@ -88,13 +90,13 @@ public type AccountResponse record {|
 public type Transaction record {|
     string id;
     string transactionType;
-    string amount;
+    decimal amount;
     string description;
     string date;
     string category;
     string receiptUrl;
-    string isRecurring;
-    int recurringInterval;
+    boolean isRecurring;
+    string? recurringInterval;
     string nextRecurringDate;
     string lastProcessed;
     string status;
@@ -108,8 +110,8 @@ public type AccountWithTransactionsResponse record {|
     string id;
     string name;
     string accountType;
-    string balance;
-    string isDefault;
+    decimal balance;
+    boolean isDefault;
     string userId;
     Transaction[] transactions;
 |};
@@ -119,12 +121,12 @@ public type TransactionStatus "PENDING"|"COMPLETED"|"FAILED";
 public type NewTransactionRequest record {|
     string accountId;
     string transactionType;
-    string amount;
+    decimal amount;
     string description;
     string date;
     string category;
-    string isRecurring;
-    int recurringInterval;
+    boolean isRecurring;
+    RecurringInterval? recurringInterval;
     string receiptUrl;
     string lastProcessed;
     TransactionStatus transactionStatus;

@@ -215,7 +215,7 @@ service / on new http:Listener(9090) {
     }
 
     //update account status
-    isolated resource function patch accounts/[string accountId]/default(http:Request request, boolean isDefault) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+    isolated resource function patch accounts/[string accountId](http:Request request, boolean isDefault) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         map<anydata>|error accountResult = serviceFun:updateAccountStatus(request, accountId, isDefault);
 
         if accountResult is error {

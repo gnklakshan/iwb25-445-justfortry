@@ -115,12 +115,14 @@ public isolated function getAccountWithTransactions(http:Request request, string
 
     // Fetch account from database
     types:AccountResponse|error accountResult = database:getAccountById(accountId, userId);
+    if accountResult is error {
+        return error("Failed to fetch account. " + accountResult.message());
+    }
 
     // Fetch transactions for the account
     types:Transaction[]|error transactionsResult = database:getTransactionsByAccountId(accountId, userId);
-
-    if accountResult is error || transactionsResult is error {
-        return error("Failed to fetch account or transactions. ");
+    if transactionsResult is error {
+        return error("Failed to fetch transactions. " + transactionsResult.message());
     }
 
     types:AccountResponse account = accountResult;
@@ -177,9 +179,22 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
 
     // Calculate next recurring date if applicable
     string nextRecurringDateStr = "";
-    if newTransaction.isRecurring == "true" && newTransaction.recurringInterval > 0 {
+    if newTransaction.isRecurring == true && newTransaction.recurringInterval is types:RecurringInterval {
+        types:RecurringInterval interval = <types:RecurringInterval>newTransaction.recurringInterval;
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * newTransaction.recurringInterval);
+        // Calculate days based on interval type
+        int daysToAdd = 0;
+        if interval == "DAILY" {
+            daysToAdd = 1;
+        } else if interval == "WEEKLY" {
+            daysToAdd = 7;
+        } else if interval == "MONTHLY" {
+            daysToAdd = 30;
+        } else if interval == "YEARLY" {
+            daysToAdd = 365;
+        }
+
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     }
 
@@ -206,7 +221,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
     // Save transaction to database
     error? createResult = database:addTransaction(newTransactionData);
     if createResult is error {
-        return error("Transaction creation failed. Please try again later.");
+        return error("Transaction creation failed: " + createResult.message());
     }
 
     return newTransactionData;

@@ -109,17 +109,9 @@ Creates a new account.
 }
 ```
 
-### `PATCH /accounts/{accountId}/default`
+### `PATCH /accounts/{accountId}??isDefault={value}`
 
 Updates the default account for a user.
-
-**Request Body:**
-
-```json
-{
-  "isDefault": "boolean"
-}
-```
 
 **Response:**
 

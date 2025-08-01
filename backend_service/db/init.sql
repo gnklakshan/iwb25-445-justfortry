@@ -52,7 +52,7 @@ CREATE TYPE RecurringInterval AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
 -- transactions table
 CREATE TABLE transactions (
     id TEXT PRIMARY KEY,
-    type TransactionType NOT NULL,
+    transactionType TransactionType NOT NULL,
     amount DECIMAL(65,30) NOT NULL,
     description TEXT,
     date TIMESTAMP NOT NULL,
