@@ -1,12 +1,12 @@
-name: Prettier Format Check
+name: Code prettier and build Check
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main] 
 
 jobs:
-  prettier:
-    name: Check Prettier Formatting
+  code-check:
+    name: Prettier + Build Check
     runs-on: ubuntu-latest
 
     steps:
@@ -17,10 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18 
-
       - name: Install dependencies
         run: npm install
 
-      - name: Run Prettier check
+      - name: Check Prettier formatting
         run: npx prettier --check .
+
+      - name: Build project
+        run: npm run build
 
