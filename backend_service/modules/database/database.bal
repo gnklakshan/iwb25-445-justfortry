@@ -236,6 +236,29 @@ public isolated function addTransaction(types:Transaction trans) returns error? 
     return;
 }
 
+public isolated function updateTransaction(string transactionId, string userId, types:UpdateRequest updatedTrans) returns types:Transaction|error {
+    string updatedAtStr = time:utcToString(time:utcNow());
+
+    sql:ParameterizedQuery updateQuery = `
+        UPDATE transactions
+        SET status = ${updatedTrans.transactionStatus}::transactionstatus, updatedAt = ${updatedAtStr}::timestamp
+        WHERE id = ${transactionId} AND userId = ${userId}
+        RETURNING id, transactionType::text as transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval::text as recurringInterval, nextRecurringDate, lastProcessed, status::text as status, userId, accountId, createdAt, updatedAt
+    `;
+    types:Transaction|sql:Error result = dbClient->queryRow(updateQuery);
+
+    if result is sql:Error {
+        return error("Failed to update transaction: " + result.message());
+    }
+
+    types:Transaction|error updatedTransaction = fetchTransactionById(transactionId, userId);
+    if updatedTransaction is error {
+        return error("Failed to fetch updated transaction: " + updatedTransaction.message());
+    }
+
+    return updatedTransaction;
+};
+
 public isolated function fetchAllTransactionOfUser(string userId) returns types:Transaction[]|error {
     sql:ParameterizedQuery selectQuery = `
         SELECT 

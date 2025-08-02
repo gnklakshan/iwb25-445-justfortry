@@ -227,6 +227,26 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
     return newTransactionData;
 }
 
+public isolated function updateTransaction(http:Request request, string transactionId, types:UpdateRequest updateRequest) returns types:Transaction|error {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to update transaction");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // Update transaction in database
+    types:Transaction|error updatedTransaction = check database:updateTransaction(transactionId, userId, updateRequest);
+    if updatedTransaction is error {
+        return error("Failed to update transaction. " + updatedTransaction.message());
+    }
+
+    return updatedTransaction;
+}
+
 public isolated function getAllTransactionOfUser(http:Request request) returns types:Transaction[]|error {
     // Validate authorization header 
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
