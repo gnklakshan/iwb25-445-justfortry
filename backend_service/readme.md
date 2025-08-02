@@ -237,7 +237,7 @@ Creates a new transaction.
   "date": "string",
   "category": "string",
   "isRecurring": "boolean",
-  "recurringInterval": "int", - indays
+  "recurringInterval": "DAILY"|"WEEKLY"|"MONTHLY"|"YEARLY"
   "receiptUrl":"string",
   "lastProcessed":"date"
   "transactionStatus": 'PENDING'| 'COMPLETED'|'FAILED'
@@ -270,7 +270,7 @@ Creates a new transaction.
 }
 ```
 
-### `PUT /transactions/:id`
+### `PATCH /transactions/{transaction ID}`
 
 Updates a transaction.
 
@@ -278,14 +278,16 @@ Updates a transaction.
 
 ```json
 {
-  "userId": "string",
-  "type": "string",
+  "transactionType": "string",
   "amount": "number",
   "description": "string",
   "date": "string",
   "category": "string",
   "isRecurring": "boolean",
-  "recurringInterval": "string"
+  "recurringInterval": "DAILY"|"WEEKLY"|"MONTHLY"|"YEARLY",
+  "transactionStatus": "PENDING"|"COMPLETED"|"FAILED",
+  "lastProcessed":"string",
+  "receiptUrl":"string"
 }
 ```
 
