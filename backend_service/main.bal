@@ -214,7 +214,10 @@ service / on new http:Listener(9090) {
         return response;
     }
 
-    // get all transactions of a user
+    # Get all transactions of a user
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + return - JSON response with transactions array or error
     isolated resource function get transactions(http:Request request) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         types:Transaction[]|error transactionsResult = serviceFun:getAllTransactionOfUser(request);
 
@@ -248,7 +251,11 @@ service / on new http:Listener(9090) {
         return response;
     }
 
-    //get single transaction by ID
+    # Get single transaction by ID
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + transactionId - Transaction ID to retrieve
+    # + return - JSON response with transaction data or error
     isolated resource function get transactions/[string transactionId](http:Request request) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         types:Transaction|error transactionResult = serviceFun:getTransactionById(request, transactionId);
 
@@ -279,7 +286,12 @@ service / on new http:Listener(9090) {
         return response;
     }
 
-    //update account status
+    # Update account status
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + accountId - Account ID to update
+    # + isDefault - Whether to set as default account
+    # + return - JSON response with update status or error
     isolated resource function patch accounts/[string accountId](http:Request request, boolean isDefault) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         map<anydata>|error accountResult = serviceFun:updateAccountStatus(request, accountId, isDefault);
 
@@ -310,6 +322,11 @@ service / on new http:Listener(9090) {
         return response;
     }
 
+    # Create new transaction endpoint
+    # Requires valid JWT token in Authorization header
+    # + request - HTTP request with Authorization header
+    # + newTransaction - Transaction creation data
+    # + return - JSON response with created transaction or error
     isolated resource function post transactions(http:Request request, types:NewTransactionRequest newTransaction) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         types:Transaction|error addResult = serviceFun:createNewTransaction(request, newTransaction);
 
@@ -340,6 +357,21 @@ service / on new http:Listener(9090) {
             "data": addResult.toJson()
         };
 
+        return response;
+    }
+
+    isolated resource function patch transactions/[string transactionId](http:Request request, @http:Payload types:UpdateTransactionRequest updateRequest) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:Transaction|error updateResult = serviceFun:updateTransaction(request, transactionId, updateRequest);
+        if updateResult is error {
+            string errorMessage = updateResult.message();
+            // authentication error             
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{body: {success: false, message: "Authentication required. Please provide a valid access token."}};
+            }
+            // error for other issues             
+            return <http:InternalServerError>{body: {success: false, message: errorMessage}};
+        }
+        json response = {"success": true, "data": updateResult.toJson()};
         return response;
     }
 }

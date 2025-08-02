@@ -236,6 +236,38 @@ public isolated function addTransaction(types:Transaction trans) returns error? 
     return;
 }
 
+public isolated function updateTransaction(string transactionId, string userId, types:dbTransactionUpdate updateRequest) returns types:Transaction|error {
+    string updatedAtStr = time:utcToString(time:utcNow());
+
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        UPDATE transactions
+        SET transactionType = COALESCE(${updateRequest.transactionType}    ::transactiontype, transactionType),
+        amount = COALESCE(${updateRequest.amount}, amount),
+        description = COALESCE(${updateRequest.description}, description),
+        date = COALESCE(${updateRequest.date}    ::timestamp, date),
+        category = COALESCE(${updateRequest.category}, category),
+        receiptUrl = COALESCE(${updateRequest.receiptUrl}, receiptUrl),
+        isRecurring = COALESCE(${updateRequest.isRecurring}, isRecurring),
+        recurringInterval = COALESCE(${updateRequest.recurringInterval}    ::recurringinterval, recurringInterval),
+        nextRecurringDate = COALESCE(${updateRequest.nextRecurringDate}    ::timestamp, nextRecurringDate),
+        lastProcessed = COALESCE(${updateRequest.lastProcessed}    ::timestamp, lastProcessed),
+        status = COALESCE(${updateRequest.status}    ::transactionstatus, status),
+        updatedAt = ${updatedAtStr}    ::timestamp
+        WHERE    id = ${transactionId}    AND userId = ${userId}`
+    );
+
+    if result is sql:Error {
+        return error("Failed to update transaction: " + result.message());
+    }
+
+    types:Transaction|error updatedTransaction = fetchTransactionById(transactionId, userId);
+    if updatedTransaction is error {
+        return error("Failed to fetch updated transaction: " + updatedTransaction.message());
+    }
+
+    return updatedTransaction;
+}
+
 public isolated function fetchAllTransactionOfUser(string userId) returns types:Transaction[]|error {
     sql:ParameterizedQuery selectQuery = `
         SELECT 
