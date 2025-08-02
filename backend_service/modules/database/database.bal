@@ -236,16 +236,25 @@ public isolated function addTransaction(types:Transaction trans) returns error? 
     return;
 }
 
-public isolated function updateTransaction(string transactionId, string userId, types:UpdateRequest updatedTrans) returns types:Transaction|error {
+public isolated function updateTransaction(string transactionId, string userId, types:dbTransactionUpdate updateRequest) returns types:Transaction|error {
     string updatedAtStr = time:utcToString(time:utcNow());
 
-    sql:ParameterizedQuery updateQuery = `
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
         UPDATE transactions
-        SET status = ${updatedTrans.transactionStatus}::transactionstatus, updatedAt = ${updatedAtStr}::timestamp
-        WHERE id = ${transactionId} AND userId = ${userId}
-        RETURNING id, transactionType::text as transactionType, amount, description, date, category, receiptUrl, isRecurring, recurringInterval::text as recurringInterval, nextRecurringDate, lastProcessed, status::text as status, userId, accountId, createdAt, updatedAt
-    `;
-    types:Transaction|sql:Error result = dbClient->queryRow(updateQuery);
+        SET transactionType = COALESCE(${updateRequest.transactionType}    ::transactiontype, transactionType),
+        amount = COALESCE(${updateRequest.amount}, amount),
+        description = COALESCE(${updateRequest.description}, description),
+        date = COALESCE(${updateRequest.date}    ::timestamp, date),
+        category = COALESCE(${updateRequest.category}, category),
+        receiptUrl = COALESCE(${updateRequest.receiptUrl}, receiptUrl),
+        isRecurring = COALESCE(${updateRequest.isRecurring}, isRecurring),
+        recurringInterval = COALESCE(${updateRequest.recurringInterval}    ::recurringinterval, recurringInterval),
+        nextRecurringDate = COALESCE(${updateRequest.nextRecurringDate}    ::timestamp, nextRecurringDate),
+        lastProcessed = COALESCE(${updateRequest.lastProcessed}    ::timestamp, lastProcessed),
+        status = COALESCE(${updateRequest.status}    ::transactionstatus, status),
+        updatedAt = ${updatedAtStr}    ::timestamp
+        WHERE    id = ${transactionId}    AND userId = ${userId}`
+    );
 
     if result is sql:Error {
         return error("Failed to update transaction: " + result.message());
@@ -257,7 +266,7 @@ public isolated function updateTransaction(string transactionId, string userId, 
     }
 
     return updatedTransaction;
-};
+}
 
 public isolated function fetchAllTransactionOfUser(string userId) returns types:Transaction[]|error {
     sql:ParameterizedQuery selectQuery = `

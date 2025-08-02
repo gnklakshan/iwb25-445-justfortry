@@ -360,36 +360,18 @@ service / on new http:Listener(9090) {
         return response;
     }
 
-    isolated resource function patch transactions/[string transactionId](http:Request request, types:UpdateRequest updateRequest) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+    isolated resource function patch transactions/[string transactionId](http:Request request, @http:Payload types:UpdateTransactionRequest updateRequest) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
         types:Transaction|error updateResult = serviceFun:updateTransaction(request, transactionId, updateRequest);
-
         if updateResult is error {
             string errorMessage = updateResult.message();
-
-            // authentication error
+            // authentication error             
             if errorMessage.includes("Unauthorized") {
-                return <http:Unauthorized>{
-                    body: {
-                        success: false,
-                        message: "Authentication required. Please provide a valid access token."
-                    }
-                };
+                return <http:Unauthorized>{body: {success: false, message: "Authentication required. Please provide a valid access token."}};
             }
-
-            //  error for other issues
-            return <http:InternalServerError>{
-                body: {
-                    success: false,
-                    message: errorMessage
-                }
-            };
+            // error for other issues             
+            return <http:InternalServerError>{body: {success: false, message: errorMessage}};
         }
-
-        json response = {
-            "success": true,
-            "data": updateResult.toJson()
-        };
-
+        json response = {"success": true, "data": updateResult.toJson()};
         return response;
     }
 }

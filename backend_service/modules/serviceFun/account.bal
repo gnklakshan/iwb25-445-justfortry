@@ -227,7 +227,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
     return newTransactionData;
 }
 
-public isolated function updateTransaction(http:Request request, string transactionId, types:UpdateRequest updateRequest) returns types:Transaction|error {
+public isolated function updateTransaction(http:Request request, string transactionId, types:UpdateTransactionRequest updateRequest) returns types:Transaction|error {
     // Validate authorization header using utility function
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
 
@@ -238,8 +238,91 @@ public isolated function updateTransaction(http:Request request, string transact
     types:AuthenticatedUser authenticatedUser = authResult;
     string userId = authenticatedUser.userId;
 
+    // get the current transaction to check existing values
+    types:Transaction|error currentTransaction = database:fetchTransactionById(transactionId, userId);
+    if currentTransaction is error {
+        return error("Transaction not found: " + currentTransaction.message());
+    }
+
+    // Calculate next recurring date if isRecurring is being set to true or recurringInterval is being changed
+    string? nextRecurringDateStr = ();
+
+    // Determine if we need to calculate next recurring date
+    boolean shouldCalculateNextDate = false;
+    types:RecurringInterval? intervalToUse = ();
+
+    if updateRequest.isRecurring == true {
+        shouldCalculateNextDate = true;
+        // Use the new interval if provided, otherwise use existing one
+        if updateRequest.recurringInterval is types:RecurringInterval {
+            intervalToUse = updateRequest.recurringInterval;
+        } else if currentTransaction.recurringInterval is string {
+            // Convert existing interval string to RecurringInterval type
+            string existingInterval = <string>currentTransaction.recurringInterval;
+            if existingInterval == "DAILY" || existingInterval == "WEEKLY" ||
+                existingInterval == "MONTHLY" || existingInterval == "YEARLY" {
+                intervalToUse = <types:RecurringInterval>existingInterval;
+            }
+        }
+    } else if updateRequest.isRecurring != false && currentTransaction.isRecurring == true {
+        // Transaction is already recurring and we're not setting it to false
+        if updateRequest.recurringInterval is types:RecurringInterval {
+            // Interval is being changed, recalculate
+            shouldCalculateNextDate = true;
+            intervalToUse = updateRequest.recurringInterval;
+        }
+    }
+
+    if shouldCalculateNextDate && intervalToUse is types:RecurringInterval {
+        time:Utc currentTime = time:utcNow();
+
+        // Calculate days based on interval type
+        int daysToAdd = 0;
+        if intervalToUse == "DAILY" {
+            daysToAdd = 1;
+        } else if intervalToUse == "WEEKLY" {
+            daysToAdd = 7;
+        } else if intervalToUse == "MONTHLY" {
+            daysToAdd = 30;
+        } else if intervalToUse == "YEARLY" {
+            daysToAdd = 365;
+        }
+
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
+        nextRecurringDateStr = time:utcToString(nextRecurringDate);
+    } else if updateRequest.isRecurring == false {
+        // If setting isRecurring to false, clear the next recurring date
+        nextRecurringDateStr = "";
+    }
+
+    // Convert RecurringInterval to string for database
+    string? recurringIntervalStr = ();
+    if updateRequest.recurringInterval is types:RecurringInterval {
+        recurringIntervalStr = updateRequest.recurringInterval;
+    }
+
+    // Convert TransactionStatus to string for database
+    string? statusStr = ();
+    if updateRequest.transactionStatus is types:TransactionStatus {
+        statusStr = updateRequest.transactionStatus;
+    }
+
+    types:dbTransactionUpdate dbUpdateRequest = {
+        transactionType: updateRequest.transactionType,
+        amount: updateRequest.amount,
+        description: updateRequest.description,
+        date: updateRequest.date,
+        category: updateRequest.category,
+        receiptUrl: updateRequest.receiptUrl,
+        isRecurring: updateRequest.isRecurring,
+        recurringInterval: recurringIntervalStr,
+        nextRecurringDate: nextRecurringDateStr,
+        lastProcessed: updateRequest.lastProcessed,
+        status: statusStr
+    };
+
     // Update transaction in database
-    types:Transaction|error updatedTransaction = check database:updateTransaction(transactionId, userId, updateRequest);
+    types:Transaction|error updatedTransaction = database:updateTransaction(transactionId, userId, dbUpdateRequest);
     if updatedTransaction is error {
         return error("Failed to update transaction. " + updatedTransaction.message());
     }

@@ -132,6 +132,29 @@ public type NewTransactionRequest record {|
     TransactionStatus transactionStatus;
 |};
 
-public type UpdateRequest record {|
-    string transactionStatus;
+public type dbTransactionUpdate record {|
+    string? transactionType;
+    decimal? amount;
+    string? description;
+    string? date;
+    string? category;
+    string? receiptUrl;
+    boolean? isRecurring;
+    string? recurringInterval;
+    string? nextRecurringDate;
+    string? lastProcessed;
+    string? status;
+|};
+
+public type UpdateTransactionRequest record {|
+    string? transactionType;
+    decimal? amount;
+    string? description;
+    string? date;
+    string? category;
+    string? receiptUrl;
+    boolean? isRecurring;
+    RecurringInterval? recurringInterval;
+    string? lastProcessed;
+    TransactionStatus? transactionStatus;
 |};
