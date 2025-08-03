@@ -1,56 +1,38 @@
-import { parseJwt } from "@/lib/auth";
-import { createContext, useContext, useEffect, useState } from "react";
-
-type User = { id: string; email: string };
+import { createContext, useEffect, useState, ReactNode } from "react";
 
 type AuthContextType = {
   isLoggedIn: boolean;
-  user?: User;
   login: (token: string) => void;
   logout: () => void;
 };
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+export const AuthContext = createContext<AuthContextType>({
+  isLoggedIn: false,
+  login: () => {},
+  logout: () => {},
+});
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | undefined>(undefined);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      const payload = parseJwt(token);
-      if (payload) {
-        setUser({ id: payload.sub, email: payload.email });
-      } else {
-        logout();
-      }
-    }
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
   }, []);
 
   const login = (token: string) => {
-    localStorage.setItem("authToken", token);
-    const payload = parseJwt(token);
-    if (payload) {
-      setUser({ id: payload.sub, email: payload.email });
-    }
+    localStorage.setItem("token", token);
+    setIsLoggedIn(true);
   };
 
   const logout = () => {
-    localStorage.removeItem("authToken");
-    setUser(undefined);
+    localStorage.clear();
+    setIsLoggedIn(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn: !!user, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 };
