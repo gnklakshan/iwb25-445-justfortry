@@ -10,7 +10,7 @@ import {
 import { Switch } from "@radix-ui/react-switch";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-const AccountCart: React.FC<Account> = (account) => {
+const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
   const { id, name, type, balance, isDefault } = account;
   const loading = false;
   const handleDefaultChange = () => {
@@ -50,4 +50,4 @@ const AccountCart: React.FC<Account> = (account) => {
   );
 };
 
-export default AccountCart;
+export default AccountCard;
