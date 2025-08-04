@@ -4,8 +4,10 @@ import Image from "next/image";
 import React from "react";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useRouter } from "next/router";
 
 const Header = () => {
+  const router = useRouter();
   const { isLoggedIn } = useAuth();
   return (
     <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
@@ -19,7 +21,6 @@ const Header = () => {
           onClick={() => (window.location.href = "/")}
         />
 
-        {/* Navigation Links - Different for signed in/out users */}
         <div className="hidden md:flex items-center space-x-8">
           {!isLoggedIn && (
             <>
@@ -61,7 +62,7 @@ const Header = () => {
             <Button
               variant="outline"
               className="px-6 py-2 rounded-full font-semibold shadow hover:bg-blue-50 transition"
-              onClick={() => {}}
+              onClick={() => router.push("/auth/sign-in")}
             >
               Login
             </Button>
