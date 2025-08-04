@@ -10,3 +10,11 @@ export type UserType = {
   email: string;
   userId: string;
 };
+
+export type Account ={
+    id: string;
+    name: string;
+    type: "CURRENT" | "SAVINGS";
+    balance: number;
+    isDefault: boolean;
+}
