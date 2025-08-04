@@ -3,6 +3,7 @@ import useAxios from "@/hooks/useAxios";
 import { FormDataType } from "@/types/types";
 import { useRouter } from "next/router";
 import React from "react";
+import { toast } from "sonner";
 
 const SignUP = () => {
   const router = useRouter();
@@ -10,10 +11,15 @@ const SignUP = () => {
 
   const handleSignUp = async (data: FormDataType) => {
     const { email, password, confirmpassword, name } = data;
-    if (!email || !password || !confirmpassword || !name) return;
+    if (!email || !password || !confirmpassword || !name) {
+      console.error("All fields are required");
+      toast.error("All fields are required");
+      return;
+    }
 
     if (password !== confirmpassword) {
       console.error("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
 
@@ -25,9 +31,11 @@ const SignUP = () => {
     try {
       const response = await post("auth/signup", payload);
       if (response) {
+        toast.success("Sign up successful! Please log in.");
         router.replace("/auth/sign-in");
       }
     } catch (err) {
+      toast.error("Sign up failed. Please try again.");
       console.error("Sign up error:", error);
       return;
     }

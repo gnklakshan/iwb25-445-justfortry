@@ -4,6 +4,7 @@ import useAxios from "@/hooks/useAxios";
 import { FormDataType, UserType } from "@/types/types";
 import { useRouter } from "next/router";
 import React from "react";
+import { toast } from "sonner";
 
 const SignIN = () => {
   const { login } = useAuth();
@@ -27,10 +28,12 @@ const SignIN = () => {
           userId: response.userId,
         };
         login(response.token, user);
+        toast.success("Login successful!");
         router.replace("/");
       }
     } catch (err) {
       console.error("Login error:", error);
+      toast.error("Login failed. Please check your credentials.");
       return;
     }
   };
