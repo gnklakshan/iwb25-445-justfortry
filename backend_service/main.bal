@@ -5,7 +5,19 @@ import backend_service.types;
 
 import ballerina/http;
 
+# CORS configuration to allow requests from frontend
+http:CorsConfig corsConfig = {
+    allowOrigins: ["http://localhost:3000"],
+    allowCredentials: true,
+    allowHeaders: ["Authorization", "Content-Type", "Accept"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    maxAge: 84900
+};
+
 # Main service with authentication endpoints and protected resources
+@http:ServiceConfig {
+    cors: corsConfig
+}
 service / on new http:Listener(9090) {
     # User signup endpoint
     # + signupRequest - User signup data
