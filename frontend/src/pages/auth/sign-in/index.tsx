@@ -27,7 +27,7 @@ const SignIN = () => {
           userId: response.userId,
         };
         login(response.token, user);
-        router.push("/");
+        router.replace("/");
       }
     } catch (err) {
       console.error("Login error:", error);
