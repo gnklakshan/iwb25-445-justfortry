@@ -33,7 +33,7 @@ const AuthForm = () => {
   };
 
   return (
-    <div className="pt-[600px] pb-20 px-4">
+    <div>
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-md space-y-6">
         <div className="flex flex-col items-center space-y-2">
           <Image
