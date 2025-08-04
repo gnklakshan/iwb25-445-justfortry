@@ -1,26 +1,26 @@
+import { FormDataType } from "@/types/types";
+import { on } from "events";
 import { Lock, Mail, User } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
 
-type FormData = {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmpassword?: string;
+type AuthFormProps = {
+  onSubmit: (data: FormDataType) => void;
+  isSignup: boolean;
 };
 
-const initialFormData: FormData = {
+const initialFormData: FormDataType = {
   name: "",
   email: "",
   password: "",
   confirmpassword: "",
 };
 
-const AuthForm = () => {
-  const [isSignup, setIsSignup] = useState(false);
-  const [form, setForm] = useState<FormData>(initialFormData);
-
-  const toggleMode = () => setIsSignup((prev) => !prev);
+const AuthForm: React.FC<AuthFormProps> = (props) => {
+  const router = useRouter();
+  const { onSubmit, isSignup } = props;
+  const [form, setForm] = useState<FormDataType>(initialFormData);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -29,7 +29,8 @@ const AuthForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log(isSignup ? "Signing up" : "Logging in", form);
+    onSubmit?.(form);
+    setForm(initialFormData);
   };
 
   return (
@@ -113,7 +114,9 @@ const AuthForm = () => {
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
             type="button"
-            onClick={toggleMode}
+            onClick={() =>
+              router.push(isSignup ? "/auth/sign-in" : "/auth/sign-up")
+            }
             className="text-blue-600 font-medium hover:underline"
           >
             {isSignup ? "Log In" : "Sign Up"}

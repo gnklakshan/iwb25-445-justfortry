@@ -4,7 +4,7 @@ import React from "react";
 const SignUP = () => {
   return (
     <div className="pt-20 pb-20 px-4 min-h-screen flex items-center justify-center">
-      <AuthForm />
+      <AuthForm onSubmit={() => {}} isSignup={true} />
     </div>
   );
 };
