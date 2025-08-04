@@ -4,6 +4,7 @@ import Head from "next/head";
 import Header from "@/components/header";
 import { AuthProvider } from "@/context/AuthContext";
 import "@/styles/globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <main className="min-h-screen">
           <Component {...pageProps} />
         </main>
+        <Toaster richColors />
       </div>
     </AuthProvider>
   );
