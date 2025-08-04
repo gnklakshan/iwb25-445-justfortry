@@ -8,6 +8,7 @@ import React, { useState } from "react";
 type AuthFormProps = {
   onSubmit: (data: FormDataType) => void;
   isSignup: boolean;
+  loading?: boolean;
 };
 
 const initialFormData: FormDataType = {
@@ -19,7 +20,7 @@ const initialFormData: FormDataType = {
 
 const AuthForm: React.FC<AuthFormProps> = (props) => {
   const router = useRouter();
-  const { onSubmit, isSignup } = props;
+  const { onSubmit, isSignup, loading } = props;
   const [form, setForm] = useState<FormDataType>(initialFormData);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,10 +115,11 @@ const AuthForm: React.FC<AuthFormProps> = (props) => {
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
             type="button"
+            disabled={loading}
             onClick={() =>
               router.push(isSignup ? "/auth/sign-in" : "/auth/sign-up")
             }
-            className="text-blue-600 font-medium hover:underline"
+            className="text-blue-600 font-medium hover:underline disabled:opacity-50"
           >
             {isSignup ? "Log In" : "Sign Up"}
           </button>

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { UserType } from "@/types/types";
 import { createContext, useEffect, useState, ReactNode } from "react";
 
 type AuthContextType = {
   isLoggedIn: boolean;
-  login: (token: string, userData?: any) => void;
+  login: (token: string, userData?: UserType) => void;
   logout: () => void;
-  userInfo: any;
+  userInfo: UserType | null;
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -17,7 +18,7 @@ export const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<UserType | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -28,14 +29,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (token) {
       setIsLoggedIn(true);
       setUserInfo({
-        name,
-        email,
-        userId,
+        name: name ?? "",
+        email: email ?? "",
+        userId: userId ?? "",
       });
     }
   }, []);
 
-  const login = (token: string, userData?: any) => {
+  const login = (token: string, userData?: UserType) => {
     localStorage.setItem("token", token);
 
     if (userData) {

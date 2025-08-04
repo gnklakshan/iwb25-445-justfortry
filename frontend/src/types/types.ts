@@ -4,3 +4,9 @@ export type FormDataType = {
   password?: string;
   confirmpassword?: string;
 };
+
+export type UserType = {
+  name: string;
+  email: string;
+  userId: string;
+};
