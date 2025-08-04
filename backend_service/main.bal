@@ -5,7 +5,34 @@ import backend_service.types;
 
 import ballerina/http;
 
+isolated function getAllowedOrigins() returns string[] {
+    string:RegExp commaPattern = re `,`;
+    string[] origins = commaPattern.split(allowedOrigins);
+    string[] allowedOriginsList = [];
+
+    foreach string origin in origins {
+        string trimmedOrigin = origin.trim();
+        if trimmedOrigin.length() > 0 {
+            allowedOriginsList.push(trimmedOrigin);
+        }
+    }
+
+    return allowedOriginsList;
+}
+
+# CORS configuration to allow requests from frontends
+http:CorsConfig corsConfig = {
+    allowOrigins: getAllowedOrigins(),
+    allowCredentials: true,
+    allowHeaders: ["Authorization", "Content-Type", "Accept"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    maxAge: 84900
+};
+
 # Main service with authentication endpoints and protected resources
+@http:ServiceConfig {
+    cors: corsConfig
+}
 service / on new http:Listener(9090) {
     # User signup endpoint
     # + signupRequest - User signup data
