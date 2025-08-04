@@ -5,9 +5,24 @@ import backend_service.types;
 
 import ballerina/http;
 
-# CORS configuration to allow requests from frontend
+isolated function getAllowedOrigins() returns string[] {
+    string:RegExp commaPattern = re `,`;
+    string[] origins = commaPattern.split(allowedOrigins);
+    string[] allowedOriginsList = [];
+
+    foreach string origin in origins {
+        string trimmedOrigin = origin.trim();
+        if trimmedOrigin.length() > 0 {
+            allowedOriginsList.push(trimmedOrigin);
+        }
+    }
+
+    return allowedOriginsList;
+}
+
+# CORS configuration to allow requests from frontends
 http:CorsConfig corsConfig = {
-    allowOrigins: ["http://localhost:3000"],
+    allowOrigins: getAllowedOrigins(),
     allowCredentials: true,
     allowHeaders: ["Authorization", "Content-Type", "Accept"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
