@@ -36,7 +36,7 @@ const SignUP = () => {
       }
     } catch (err) {
       toast.error("Sign up failed. Please try again.");
-      console.error("Sign up error:", error);
+      console.error("Sign up error:", error, err);
       return;
     }
   };

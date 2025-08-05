@@ -32,7 +32,7 @@ const SignIN = () => {
         router.replace("/");
       }
     } catch (err) {
-      console.error("Login error:", error);
+      console.error("Login error:", error, err);
       toast.error("Login failed. Please check your credentials.");
       return;
     }

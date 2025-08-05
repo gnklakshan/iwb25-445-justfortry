@@ -1,8 +1,7 @@
 import AccountCard from "@/components/_account/accountCard";
-import NewAccountDrawer from "@/components/_account/newAccountDrawer";
-import { Card, CardContent } from "@/components/ui/card";
+import AddNewAccCard from "@/components/_account/addNewAccCard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { Account } from "@/types/types";
-import { Plus } from "lucide-react";
 import React from "react";
 
 const Dashboard = () => {
@@ -23,23 +22,18 @@ const Dashboard = () => {
     },
   ];
   return (
-    <div className="space-y-8">
-      {/* account section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <NewAccountDrawer>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed">
-            <CardContent className="flex flex-col items-center justify-center text-muted-foreground h-full pt-5">
-              <Plus className="h-10 w-10 mb-2" />
-              <p className="text-sm font-medium">Add New Account</p>
-            </CardContent>
-          </Card>
-        </NewAccountDrawer>
-        {userAccounts.length > 0 &&
-          userAccounts.map((account) => (
-            <AccountCard key={account.id} account={account} />
-          ))}
+    <ProtectedRoute>
+      <div className="space-y-8 pt-22 px-30">
+        {/* account section */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <AddNewAccCard />
+          {userAccounts.length > 0 &&
+            userAccounts.map((account) => (
+              <AccountCard key={account.id} account={account} />
+            ))}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

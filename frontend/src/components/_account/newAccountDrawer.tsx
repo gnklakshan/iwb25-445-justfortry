@@ -22,7 +22,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { accountSchema } from "@/lib/schema";
 
-const NewAccountDrawer: React.FC<PropsWithChildren<{}>> = ({ children }) => {
+const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const loading = false;
   const {
