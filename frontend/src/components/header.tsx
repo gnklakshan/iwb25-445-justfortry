@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, Link, PenBox } from "lucide-react";
+import { LayoutDashboard, PenBox } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui/button";

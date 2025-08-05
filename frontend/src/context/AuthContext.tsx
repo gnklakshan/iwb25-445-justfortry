@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserType } from "@/types/types";
 import { createContext, useEffect, useState, ReactNode } from "react";
 
