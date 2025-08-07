@@ -12,7 +12,7 @@ import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useRouter } from "next/router";
 
 const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
-  const { id, name, type, balance, isDefault } = account;
+  const { id, name, accountType, balance, isDefault } = account;
 
   const router = useRouter();
   const loading = false;
@@ -36,7 +36,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
       <CardContent>
         <div className="text-2xl font-bold">${balance.toFixed(2)}</div>
         <p className="text-xs text-muted-foreground">
-          {type.charAt(0) + type.slice(1).toLowerCase()} Account
+          {accountType.charAt(0) + accountType.slice(1).toLowerCase()} Account
         </p>
       </CardContent>
       <CardFooter className="flex justify-between text-sm text-muted-foreground">

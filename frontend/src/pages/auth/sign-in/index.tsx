@@ -29,7 +29,7 @@ const SignIN = () => {
         };
         login(response.token, user);
         toast.success("Login successful!");
-        router.replace("/");
+        router.replace("/home");
       }
     } catch (err) {
       console.error("Login error:", error, err);
