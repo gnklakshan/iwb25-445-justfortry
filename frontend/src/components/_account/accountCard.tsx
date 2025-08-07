@@ -9,9 +9,12 @@ import {
 } from "../ui/card";
 import { Switch } from "@radix-ui/react-switch";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useRouter } from "next/router";
 
 const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
   const { id, name, type, balance, isDefault } = account;
+
+  const router = useRouter();
   const loading = false;
   const handleDefaultChange = () => {
     console.log(`Toggling default status for account ${id}`);
@@ -20,7 +23,7 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
   return (
     <Card
       className="hover:shadow-md transition-shadow group relative"
-      onClick={() => console.log("Account clicked")}
+      onClick={() => router.push(`/account/${id}`)}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium capitalize">{name}</CardTitle>
