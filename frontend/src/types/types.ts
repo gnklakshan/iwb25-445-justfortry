@@ -14,7 +14,7 @@ export type UserType = {
 export type Account = {
   id: string;
   name: string;
-  type: "CURRENT" | "SAVINGS";
+  accountType: "CURRENT" | "SAVINGS";
   balance: number;
   isDefault: boolean;
 };

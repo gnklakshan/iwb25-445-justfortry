@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 const Header = () => {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   return (
     <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -44,7 +44,7 @@ const Header = () => {
               <Button
                 variant="outline"
                 className="text-gray-600 hover:text-blue-600 flex items-center gap-2 py-1"
-                onClick={() => {}}
+                onClick={() => router.push("/home")}
               >
                 <LayoutDashboard size={18} />
                 <span className="hidden md:inline">Dashboard</span>
@@ -92,7 +92,10 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     className="w-full justify-start px-4 py-2 text-red-600 hover:bg-red-50 rounded-b-xl"
-                    onClick={() => {}}
+                    onClick={() => {
+                      logout();
+                      router.push("/auth/sign-in");
+                    }}
                   >
                     Logout
                   </Button>
