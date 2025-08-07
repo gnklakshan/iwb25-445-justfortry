@@ -1,6 +1,6 @@
 import AccountCard from "@/components/_account/accountCard";
 import AddNewAccCard from "@/components/_account/addNewAccCard";
-import DashboardSummery from "@/components/_dashboard/dashboard-summery";
+import TransactionSummery from "@/components/_transaction/tansaction-summery";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Account } from "@/types/types";
 import React, { Suspense } from "react";
@@ -37,7 +37,7 @@ const Dashboard = () => {
             </div>
 
             {/* summery */}
-            <DashboardSummery />
+            <TransactionSummery />
 
             {/* account section */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

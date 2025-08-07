@@ -1,6 +1,6 @@
 import React from "react";
 
-const DashboardSummery = () => {
+const TransactionSummery = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* recent transactions */}
@@ -10,4 +10,4 @@ const DashboardSummery = () => {
   );
 };
 
-export default DashboardSummery;
+export default TransactionSummery;
