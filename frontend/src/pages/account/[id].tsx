@@ -19,7 +19,7 @@ const AccountDetails = () => {
   const router = useRouter();
   const { accountId } = router.query;
   const [accountDetails, setAccountDetails] = useState<AccountDetailsType>(
-    initialAccountDetails,
+    initialAccountDetails
   );
 
   //get account data
@@ -71,7 +71,10 @@ const AccountDetails = () => {
           </div>
 
           {/* transaction Table */}
-          <TransactionTable />
+          <TransactionTable
+            transactions={accountDetails.transactions}
+            deleteTransaction={() => {}}
+          />
         </div>
       )}
     </div>
