@@ -1,5 +1,10 @@
 # Backend APIs and there Structure
 
+## Auth API
+
+### `POST /`
+Create New User Account
+
 ## Accounts API
 
 ### `GET /accounts`
