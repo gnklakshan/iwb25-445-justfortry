@@ -18,3 +18,26 @@ export type Account = {
   balance: number;
   isDefault: boolean;
 };
+
+export interface AccountDetailsType extends Account {
+  transactions: Transaction[];
+}
+
+export type Transaction = {
+  id: string;
+  transactionType: string;
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+  receiptUrl: string;
+  isRecurring: boolean;
+  recurringInterval: string;
+  nextRecurringDate: string;
+  lastProcessed: string;
+  status: string;
+  userId: string;
+  accountId: string;
+  createdAt: string;
+  updatedAt: string;
+};
