@@ -57,7 +57,7 @@ const useAxios = <T>() => {
           err.message ||
           "An error occurred";
 
-        if (err.response?.data?.errors?.[0]?.code === "12004") {
+        if (err.response?.status === 401) {
           if (localStorage.getItem("token")) {
             alert("You have been logged out due to inactivity");
           }
@@ -69,6 +69,18 @@ const useAxios = <T>() => {
 
           window.location.replace("/");
         }
+        // if (err.response?.data?.errors?.[0]?.code === "12004") {
+        //   if (localStorage.getItem("token")) {
+        //     alert("You have been logged out due to inactivity");
+        //   }
+
+        //   localStorage.removeItem("token");
+        //   localStorage.removeItem("name");
+        //   localStorage.removeItem("email");
+        //   localStorage.removeItem("userId");
+
+        //   window.location.replace("/");
+        // }
         setError(errorMessage);
         // Create a new error with the message attached
         const apiError = new Error(errorMessage);

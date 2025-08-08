@@ -4,13 +4,14 @@ import TransactionSummery from "@/components/_transaction/tansaction-summery";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import useAxios from "@/hooks/useAxios";
 import { Account } from "@/types/types";
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const { get, loading, error } = useAxios();
   const [userAccounts, setUserAccounts] = useState<Account[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   //get all accounts of the user
   const getUserAccounts = useCallback(async () => {
@@ -24,7 +25,7 @@ const Dashboard = () => {
       console.error("Error fetching user accounts:", err);
       toast.error("Error fetching user accounts", { description: error });
     }
-  }, [get, error]);
+  }, [get, error, isDrawerOpen]);
 
   // Fetch user accounts when the component mounts
   useEffect(() => {
@@ -49,7 +50,10 @@ const Dashboard = () => {
 
             {/* account section */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <AddNewAccCard />
+              <AddNewAccCard
+                isOpen={isDrawerOpen}
+                setIsOpen={setIsDrawerOpen}
+              />
               {userAccounts.length > 0 &&
                 userAccounts.map((account) => (
                   <AccountCard key={account.id} account={account} />

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ type TransactionFormProps = {
 };
 
 type Transaction = {
-  type: "EXPENSE" | "INCOME";
+  accountType: "EXPENSE" | "INCOME";
   amount: string;
   description?: string;
   date: Date;
@@ -38,6 +38,7 @@ type Transaction = {
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const router = useRouter();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const accounts: Account[] = [];
   const categories = [
     { id: "1", name: "Food", type: "EXPENSE" },
@@ -57,12 +58,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     resolver: zodResolver(transactionSchema),
   });
 
-  const type = watch("type");
+  const accountType = watch("accountType");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === type,
+    (category) => category.type === accountType,
   );
 
   // onSubmit handler
@@ -78,9 +79,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           <label className="text-sm font-medium">Type</label>
           <Select
             onValueChange={(value: "EXPENSE" | "INCOME") =>
-              setValue("type", value)
+              setValue("accountType", value)
             }
-            defaultValue={type}
+            defaultValue={accountType}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
@@ -90,8 +91,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
-          {errors.type && (
-            <p className="text-sm text-red-500">{errors.type.message}</p>
+          {errors.accountType && (
+            <p className="text-sm text-red-500">{errors.accountType.message}</p>
           )}
         </div>
         {/* Category */}
@@ -148,7 +149,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
                   {account.name} (${account.balance.toFixed(2)})
                 </SelectItem>
               ))}
-              <NewAccountDrawer>
+              <NewAccountDrawer
+                isOpen={isDrawerOpen}
+                setIsOpen={setIsDrawerOpen}
+              >
                 <Button
                   variant="ghost"
                   className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
