@@ -19,7 +19,7 @@ const AccountDetails = () => {
   const router = useRouter();
   const { accountId } = router.query;
   const [accountDetails, setAccountDetails] = useState<AccountDetailsType>(
-    initialAccountDetails
+    initialAccountDetails,
   );
 
   //get account data
