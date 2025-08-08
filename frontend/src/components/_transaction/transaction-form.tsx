@@ -26,7 +26,7 @@ type TransactionFormProps = {
 };
 
 type Transaction = {
-  type: "EXPENSE" | "INCOME";
+  accountType: "EXPENSE" | "INCOME";
   amount: string;
   description?: string;
   date: Date;
@@ -58,12 +58,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     resolver: zodResolver(transactionSchema),
   });
 
-  const type = watch("type");
+  const accountType = watch("accountType");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === type,
+    (category) => category.type === accountType,
   );
 
   // onSubmit handler
@@ -79,9 +79,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           <label className="text-sm font-medium">Type</label>
           <Select
             onValueChange={(value: "EXPENSE" | "INCOME") =>
-              setValue("type", value)
+              setValue("accountType", value)
             }
-            defaultValue={type}
+            defaultValue={accountType}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
@@ -91,8 +91,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
-          {errors.type && (
-            <p className="text-sm text-red-500">{errors.type.message}</p>
+          {errors.accountType && (
+            <p className="text-sm text-red-500">{errors.accountType.message}</p>
           )}
         </div>
         {/* Category */}
