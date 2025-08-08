@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Drawer,
   DrawerClose,
@@ -21,12 +21,43 @@ import { Switch } from "../ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { accountSchema } from "@/lib/schema";
+import useAxios from "@/hooks/useAxios";
+import { toast } from "sonner";
+import { useRouter } from "next/router";
 
-const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [open, setOpen] = useState(false);
-  const loading = false;
+const NewAccountDrawer: React.FC<{
+  children: React.ReactNode;
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ children, isOpen, setIsOpen }) => {
+  const router = useRouter();
+  const { post, error, loading } = useAxios();
+
+  // Set search param when drawer opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, "new-account": "True" },
+        },
+        undefined,
+        { shallow: true }
+      );
+    } else {
+      const { "new-account": _removed, ...rest } = router.query;
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: rest,
+        },
+        undefined,
+        { shallow: true }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const {
     register,
     handleSubmit,
@@ -38,18 +69,32 @@ const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: "",
-      type: "CURRENT",
-      balance: "",
+      accountType: "CURRENT",
+      balance: 0,
       isDefault: false,
     },
   });
 
   const onSubmit = async () => {
-    console.log();
-    reset(); // Reset form
+    try {
+      await post("accounts/create", {
+        name: watch("name"),
+        accountType: watch("accountType"),
+        balance: watch("balance"),
+        isDefault: watch("isDefault"),
+      });
+      toast.success(`${watch("name")}: Account created successfully!`);
+      reset(); // Reset form after success
+      setIsOpen(false);
+    } catch (err) {
+      console.error("Error creating account:", error);
+      toast.error("Failed to create account", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
   };
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
@@ -83,11 +128,11 @@ const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
               </label>
               <Select
                 onValueChange={(value: "CURRENT" | "SAVINGS") =>
-                  setValue("type", value)
+                  setValue("accountType", value)
                 }
-                defaultValue={watch("type")}
+                defaultValue={watch("accountType")}
               >
-                <SelectTrigger id="type">
+                <SelectTrigger id="accountType">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -95,8 +140,10 @@ const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
                   <SelectItem value="SAVINGS">Savings</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.type && (
-                <p className="text-sm text-red-500">{errors.type.message}</p>
+              {errors.accountType && (
+                <p className="text-sm text-red-500">
+                  {errors.accountType.message}
+                </p>
               )}
             </div>
 
@@ -112,7 +159,7 @@ const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                {...register("balance")}
+                {...register("balance", { valueAsNumber: true })}
               />
               {errors.balance && (
                 <p className="text-sm text-red-500">{errors.balance.message}</p>
@@ -139,7 +186,7 @@ const NewAccountDrawer: React.FC<{ children: React.ReactNode }> = ({
             </div>
 
             <div className="flex gap-4 pt-4">
-              <DrawerClose asChild>
+              <DrawerClose asChild onClick={() => reset()}>
                 <Button type="button" variant="outline" className="flex-1">
                   Cancel
                 </Button>

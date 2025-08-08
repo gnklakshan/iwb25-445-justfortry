@@ -1,10 +1,15 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import NewAccountDrawer from "./newAccountDrawer";
 import { Wallet, CreditCard, Plus } from "lucide-react";
 
-const AddNewAccCard = () => {
+type NewCardProps = {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+const AddNewAccCard: React.FC<NewCardProps> = ({ isOpen, setIsOpen }) => {
   return (
-    <NewAccountDrawer>
+    <NewAccountDrawer isOpen={isOpen} setIsOpen={setIsOpen}>
       <div className=" h-48 relative group cursor-pointer">
         {/* Main Card */}
         <div className="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative transition-all duration-300 hover:shadow-lg">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -38,6 +38,7 @@ type Transaction = {
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const router = useRouter();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const accounts: Account[] = [];
   const categories = [
     { id: "1", name: "Food", type: "EXPENSE" },
@@ -62,7 +63,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === type,
+    (category) => category.type === type
   );
 
   // onSubmit handler
@@ -148,7 +149,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
                   {account.name} (${account.balance.toFixed(2)})
                 </SelectItem>
               ))}
-              <NewAccountDrawer>
+              <NewAccountDrawer
+                isOpen={isDrawerOpen}
+                setIsOpen={setIsDrawerOpen}
+              >
                 <Button
                   variant="ghost"
                   className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
@@ -173,7 +177,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground",
+                !date && "text-muted-foreground"
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
