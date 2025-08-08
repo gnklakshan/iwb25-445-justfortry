@@ -1,4 +1,5 @@
 import TransactionTable from "@/components/_account/transactionTable";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import useAxios from "@/hooks/useAxios";
 import { AccountDetailsType } from "@/types/types";
 import { useRouter } from "next/router";
@@ -17,7 +18,7 @@ const initialAccountDetails: AccountDetailsType = {
 const AccountDetails = () => {
   const { get, getLoading, error } = useAxios();
   const router = useRouter();
-  const { accountId } = router.query;
+  const accountId = router.query.id;
   const [accountDetails, setAccountDetails] = useState<AccountDetailsType>(
     initialAccountDetails
   );
@@ -41,43 +42,56 @@ const AccountDetails = () => {
   }, [accountId, getAccountData]);
 
   return (
-    <div className="mt-24 space-y-8 px-5">
-      {getLoading ? (
-        <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
-      ) : error ? (
-        <p className="text-red-500">Error loading account details: {error}</p>
-      ) : (
-        <div>
-          {/* account basic details */}
-          <div className="flex gap-4 items-end justify-between">
-            <div>
-              <h1 className="text-5xl sm:text-6xl font-bold tracking-tight gradient-title capitalize">
-                {accountDetails.name}
-              </h1>
-              <p className="text-muted-foreground">
-                {accountDetails.accountType.charAt(0) +
-                  accountDetails.accountType.slice(1).toLowerCase()}{" "}
-                Account
-              </p>
-            </div>
-            <div className="text-right pb-2">
-              <div className="text-xl sm:text-2xl font-bold">
-                ${accountDetails.balance.toFixed(2)}
+    <ProtectedRoute>
+      <div className="mt-24 space-y-8 px-5">
+        {getLoading ? (
+          <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
+        ) : error ? (
+          <p className="text-red-500">Error loading account details: {error}</p>
+        ) : (
+          <div className="px-30 ">
+            {/* account basic details */}
+            <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-end justify-between  rounded-xl  p-6 border border-zinc-200 mb-6">
+              <div>
+                <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-2">
+                  {accountDetails.name}
+                </h1>
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 mb-2">
+                  {accountDetails.accountType.charAt(0) +
+                    accountDetails.accountType.slice(1).toLowerCase()}{" "}
+                  Account
+                </span>
+                {accountDetails.isDefault && (
+                  <span className="ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
+                    Default
+                  </span>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {accountDetails.transactions.length} Transactions
-              </p>
+              <div className="text-right">
+                <div className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white mb-1">
+                  LKR{" "}
+                  {accountDetails.balance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {accountDetails.transactions.length} Transaction
+                  {accountDetails.transactions.length !== 1 && "s"}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* transaction Table */}
-          <TransactionTable
-            transactions={accountDetails.transactions}
-            deleteTransaction={() => {}}
-          />
-        </div>
-      )}
-    </div>
+            {/* transaction Table */}
+
+            <TransactionTable
+              transactions={accountDetails.transactions}
+              deleteTransaction={() => {}}
+            />
+          </div>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 };
 

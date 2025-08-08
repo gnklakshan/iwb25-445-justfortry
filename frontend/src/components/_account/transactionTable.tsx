@@ -28,6 +28,8 @@ import {
   RefreshCw,
   Clock,
   MoreHorizontal,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import router from "next/router";
 import { format } from "date-fns";
@@ -148,6 +150,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       startIndex + ITEMS_PER_PAGE
     );
   }, [filteredAndSortedTransactions, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    setSelectedIds([]); // Clear selections on page change
+  };
 
   const handleSort = (field: keyof Transaction) => {
     setSortConfig((current) => ({
@@ -277,7 +284,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         : "text-green-500"
                     )}
                   >
-                    {transaction.transactionType === "EXPENSE" ? "-" : "+"}$
+                    {transaction.transactionType === "EXPENSE" ? "-" : "+"}LKR{" "}
                     {transaction.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
@@ -297,7 +304,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                               }
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          <TooltipContent className="bg-white p-2 border border-zinc-100">
                             <div className="text-sm">
                               <div className="font-medium">Next Date:</div>
                               <div>
@@ -320,22 +327,30 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 group"
+                          aria-label="Open menu"
+                        >
+                          <MoreHorizontal className="h-4 w-4 transition-colors group-hover:text-primary" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-white border py-1 border-zinc-200  rounded-md"
+                      >
                         <DropdownMenuItem
-                          onClick={() =>
+                          onSelect={() =>
                             router.push(`/transaction?edit=${transaction.id}`)
                           }
+                          className="cursor-pointer px-4 hover:bg-zinc-100"
                         >
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => deleteTransaction([transaction.id])}
+                          className="text-destructive px-4 cursor-pointer hover:bg-red-50"
+                          onSelect={() => deleteTransaction([transaction.id])}
                         >
                           Delete
                         </DropdownMenuItem>
@@ -348,6 +363,30 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </TableBody>
         </Table>
       </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
