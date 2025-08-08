@@ -19,7 +19,7 @@ export type Account = {
   isDefault: boolean;
 };
 
-export interface AccountDetails extends Account {
+export interface AccountDetailsType extends Account {
   transactions: Transaction[];
 }
 
