@@ -63,7 +63,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === type
+    (category) => category.type === type,
   );
 
   // onSubmit handler
@@ -177,7 +177,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground"
+                !date && "text-muted-foreground",
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}

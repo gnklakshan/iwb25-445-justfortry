@@ -42,7 +42,7 @@ const NewAccountDrawer: React.FC<{
           query: { ...router.query, "new-account": "True" },
         },
         undefined,
-        { shallow: true }
+        { shallow: true },
       );
     } else {
       const { "new-account": _removed, ...rest } = router.query;
@@ -52,7 +52,7 @@ const NewAccountDrawer: React.FC<{
           query: rest,
         },
         undefined,
-        { shallow: true }
+        { shallow: true },
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
