@@ -366,7 +366,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         >
                           <DropdownMenuItem
                             onSelect={() =>
-                              router.push(`/transaction?edit=${transaction.id}`)
+                              router.push(
+                                `/transaction?edit=true&transactionId=${transaction.id}`
+                              )
                             }
                             className="cursor-pointer px-4 hover:bg-zinc-100"
                           >

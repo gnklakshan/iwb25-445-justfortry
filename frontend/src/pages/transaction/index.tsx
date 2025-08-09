@@ -4,8 +4,9 @@ import React from "react";
 
 const NewTransaction: React.FC = () => {
   const router = useRouter();
-  const { isEdit, create } = router.query;
-  const isEditMode = isEdit === "true" || create !== "true";
+  // const { isEdit, create, transactionId } = router.query;
+  // const isEditMode = isEdit === "true" || create !== "true";
+  // const id = transactionId ? transactionId : null;
 
   return (
     <div className="mt-28 max-w-3xl mx-auto px-5">
@@ -14,7 +15,7 @@ const NewTransaction: React.FC = () => {
           Add Transaction
         </h1>
       </div>
-      <TransactionForm editMode={isEditMode} />
+      <TransactionForm />
     </div>
   );
 };

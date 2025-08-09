@@ -27,9 +27,12 @@ type TransactionFormProps = {
   editMode?: boolean;
 };
 
-const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
+const TransactionForm: React.FC = () => {
   const router = useRouter();
   const { post, get, loading, error } = useAxios();
+  const { isEdit, create, transactionId } = router.query;
+  const editMode = isEdit === "true" || create !== "true";
+  const id = transactionId ? transactionId : null;
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -68,7 +71,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const status = watch("status");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === transactionType,
+    (category) => category.type === transactionType
   );
 
   useEffect(() => {
@@ -116,8 +119,28 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
         console.error("Error creating transaction:", err);
       }
     },
-    [post, reset],
+    [post, reset]
   );
+
+  //get prv transaction data
+  useEffect(() => {
+    if (editMode && transactionId) {
+      const fetchTransaction = async () => {
+        try {
+          const response = await get(`transactions/${transactionId}`);
+          if (response) {
+            reset(response);
+          } else {
+            toast.error("Failed to load transaction data");
+          }
+        } catch (err) {
+          console.error("Error fetching transaction:", error, err);
+          toast.error("Failed to load transaction data");
+        }
+      };
+      fetchTransaction();
+    }
+  }, [editMode, transactionId, get, reset, error]);
 
   // onSubmit handler
   const onSubmit = (data: TransactionFormData) => {
@@ -233,7 +256,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
                 variant="outline"
                 className={cn(
                   "w-full pl-3 text-left font-normal",
-                  !date && "text-muted-foreground",
+                  !date && "text-muted-foreground"
                 )}
               >
                 {date ? format(date, "PPP") : <span>Pick a date</span>}
