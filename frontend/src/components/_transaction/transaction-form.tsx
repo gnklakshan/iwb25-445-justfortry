@@ -71,6 +71,12 @@ const TransactionForm: React.FC = () => {
   const status = watch("status");
 
   console.log(isRecurring);
+  useEffect(() => {
+    const subscription = watch((value) => {
+      console.log("Form data:", value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const filteredCategories = categories.filter(
     (category) => category.type === transactionType
@@ -120,25 +126,37 @@ const TransactionForm: React.FC = () => {
     [post, reset]
   );
 
-  //get prv transaction data
   useEffect(() => {
-    if (editMode && transactionId) {
-      const fetchTransaction = async () => {
+    const loadData = async () => {
+      await fetchAccounts(); // first get accounts
+      if (editMode && transactionId) {
         try {
           const response = await get(`transactions/${transactionId}`);
           if (response) {
-            reset(response);
-          } else {
-            toast.error("Failed to load transaction data");
+            const tx = response;
+            reset({
+              transactionType: tx.transactionType,
+              amount: Number(tx.amount),
+              date: tx.date
+                ? new Date(tx.date).toISOString()
+                : new Date().toISOString(),
+              accountId: tx.accountId,
+              category: tx.category || "",
+              description: tx.description || "",
+              isRecurring: Boolean(tx.isRecurring),
+              receiptUrl: tx.receiptUrl || "",
+              status: tx.status,
+              recurringInterval: tx.recurringInterval ?? undefined,
+            });
           }
         } catch (err) {
           console.error("Error fetching transaction:", error, err);
           toast.error("Failed to load transaction data");
         }
-      };
-      fetchTransaction();
-    }
-  }, [editMode, transactionId, get, reset, error]);
+      }
+    };
+    loadData();
+  }, [editMode, transactionId, fetchAccounts, get, reset]);
 
   // onSubmit handler
   const onSubmit = (data: TransactionFormData) => {
@@ -176,7 +194,7 @@ const TransactionForm: React.FC = () => {
           <label className="text-sm font-medium">Category</label>
           <Select
             onValueChange={(value) => setValue("category", value)}
-            defaultValue={getValues("category")}
+            value={watch("category") || ""}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
