@@ -23,13 +23,9 @@ import { format } from "date-fns";
 import useAxios from "@/hooks/useAxios";
 import { toast } from "sonner";
 
-type TransactionFormProps = {
-  editMode?: boolean;
-};
-
 const TransactionForm: React.FC = () => {
   const router = useRouter();
-  const { post, get, loading, error } = useAxios();
+  const { post, get, patch, loading, error } = useAxios();
   const { isEdit, create, transactionId } = router.query;
   const editMode = isEdit === "true" || create !== "true";
   const id = transactionId ? transactionId : null;
@@ -97,7 +93,12 @@ const TransactionForm: React.FC = () => {
   const handleCreateTransaction = useCallback(
     async (data: TransactionFormData) => {
       try {
-        const response = await post("transactions", data);
+        let response = {};
+        if (editMode && id) {
+          response = await patch(`transactions/${id}`, data);
+        } else {
+          response = await post("transactions", data);
+        }
         if (response) {
           toast.success("Transaction created successfully");
           reset({
@@ -113,7 +114,7 @@ const TransactionForm: React.FC = () => {
             recurringInterval: undefined,
           });
         } else {
-          const message = response?.message || "Failed to create transaction";
+          const message = "Failed to create transaction";
           toast.error(message);
           console.error("Transaction creation failed:", response);
         }
