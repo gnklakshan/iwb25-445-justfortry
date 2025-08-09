@@ -303,8 +303,8 @@ public isolated function updateTransaction(http:Request request, string transact
 
     // Convert TransactionStatus to string for database
     string? statusStr = ();
-    if updateRequest.transactionStatus is types:TransactionStatus {
-        statusStr = updateRequest.transactionStatus;
+    if updateRequest.status is types:TransactionStatus {
+        statusStr = updateRequest.status;
     }
 
     types:dbTransactionUpdate dbUpdateRequest = {
