@@ -197,6 +197,9 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
         time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     }
+    if newTransaction.isRecurring == false || nextRecurringDateStr == "" {
+        nextRecurringDateStr = newTransaction.date;
+    }
 
     // Create transaction record
     types:Transaction newTransactionData = {
@@ -206,12 +209,12 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
         description: newTransaction.description,
         date: newTransaction.date,
         category: newTransaction.category,
-        receiptUrl: newTransaction.receiptUrl,
+        receiptUrl: newTransaction.receiptUrl ?: "",
         isRecurring: newTransaction.isRecurring,
         recurringInterval: newTransaction.recurringInterval,
         nextRecurringDate: nextRecurringDateStr,
         lastProcessed: time:utcToString(currentTime),
-        status: newTransaction.transactionStatus,
+        status: newTransaction.status,
         userId: authenticatedUser.userId,
         accountId: newTransaction.accountId,
         createdAt: currentTime,
