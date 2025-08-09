@@ -23,21 +23,6 @@ import { format } from "date-fns";
 import useAxios from "@/hooks/useAxios";
 import { toast } from "sonner";
 
-// type TransactionFormData = {
-//   transactionType: "EXPENSE" | "INCOME";
-//   accountId: string;
-//   amount: number;
-//   description: string;
-//   date: string;
-//   category: string;
-//   receiptUrl?: string;
-//   isRecurring: boolean;
-//   recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-//   nextRecurringDate?: string;
-//   lastProcessed: string;
-//   status: string;
-// };
-
 type TransactionFormProps = {
   editMode?: boolean;
 };
@@ -92,20 +77,29 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const handleCreateTransaction = useCallback(
     async (data: TransactionFormData) => {
       try {
-        await post("/transactions", data);
-        toast.success("Transaction created successfully");
-        reset();
-      } catch (err) {
-        toast.error("Error creating transaction");
-        console.error("Error creating transaction:", error, err);
+        const response = await post("transactions", data);
+        if (response) {
+          toast.success("Transaction created successfully");
+          reset();
+        } else {
+          const message = response?.message || "Failed to create transaction";
+          toast.error(message);
+          console.error("Transaction creation failed:", response);
+        }
+      } catch (err: any) {
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Error creating transaction";
+        toast.error(message);
+        console.error("Error creating transaction:", err);
       }
     },
-    [post, reset, error]
+    [post, reset]
   );
 
   // onSubmit handler
   const onSubmit = (data: TransactionFormData) => {
-    console.log(data);
     handleCreateTransaction(data);
   };
 
