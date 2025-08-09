@@ -3,6 +3,7 @@
 ## Auth API
 
 ### `POST /`
+
 Create New User Account
 
 ## Accounts API
@@ -195,14 +196,6 @@ Retrieves all transactions for a given user.
 ### `GET /transactions/:id`
 
 Retrieves a single transaction.
-
-**Request Body:**
-
-```json
-{
-  "userId": "string"
-}
-```
 
 **Response:**
 
