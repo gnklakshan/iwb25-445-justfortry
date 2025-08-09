@@ -70,25 +70,23 @@ const TransactionForm: React.FC = () => {
   const date = watch("date");
   const status = watch("status");
 
+  console.log(isRecurring);
+
   const filteredCategories = categories.filter(
     (category) => category.type === transactionType
   );
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await get("/accounts");
-        if (response.success) {
-          setAccounts(response.data);
-        }
-      } catch (err) {
-        console.error("Error fetching accounts:", error, err);
-        toast.error("Failed to load accounts");
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const response = await get("/accounts");
+      if (response.success) {
+        setAccounts(response.data);
       }
-    };
-    fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    } catch (err) {
+      console.error("Error fetching accounts:", error, err);
+      toast.error("Failed to load accounts");
+    }
+  }, [get]);
 
   const handleCreateTransaction = useCallback(
     async (data: TransactionFormData) => {
@@ -218,7 +216,7 @@ const TransactionForm: React.FC = () => {
             onValueChange={(value) => setValue("accountId", value)}
             value={watch("accountId") || ""}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" onClick={fetchAccounts}>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
