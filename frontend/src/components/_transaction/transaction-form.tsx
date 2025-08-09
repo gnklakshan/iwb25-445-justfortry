@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -20,31 +20,38 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "../ui/calendar";
 import { useRouter } from "next/router";
 import { format } from "date-fns";
+import useAxios from "@/hooks/useAxios";
+import { toast } from "sonner";
+
+type TransactionFormData = {
+  transactionType: "EXPENSE" | "INCOME";
+  accountId: string;
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+  receiptUrl?: string;
+  isRecurring: boolean;
+  recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+  nextRecurringDate?: string;
+  lastProcessed: string;
+  status: string;
+};
 
 type TransactionFormProps = {
   editMode?: boolean;
 };
 
-type Transaction = {
-  accountType: "EXPENSE" | "INCOME";
-  amount: string;
-  description?: string;
-  date: Date;
-  accountId: string;
-  category: string;
-  isRecurring?: boolean;
-  recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-};
-
 const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const router = useRouter();
+  const { post, get, loading, error } = useAxios();
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const accounts: Account[] = [];
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const categories = [
     { id: "1", name: "Food", type: "EXPENSE" },
     { id: "2", name: "Salary", type: "INCOME" },
   ];
-  const loading = false;
 
   const {
     register,
@@ -54,36 +61,67 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     setValue,
     getValues,
     reset,
-  } = useForm<Transaction>({
+  } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
   });
 
-  const accountType = watch("accountType");
+  const transactionType = watch("transactionType");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === accountType,
+    (category) => category.type === transactionType
+  );
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await get("/accounts");
+        if (response.success) {
+          setAccounts(response.data);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts:", error, err);
+        toast.error("Failed to load accounts");
+      }
+    };
+    fetchAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreateTransaction = useCallback(
+    async (data: TransactionFormData) => {
+      try {
+        await post("/transactions", data);
+        toast.success("Transaction created successfully");
+        reset();
+      } catch (err) {
+        toast.error("Error creating transaction");
+        console.error("Error creating transaction:", error, err);
+      }
+    },
+    [post, reset, error]
   );
 
   // onSubmit handler
-  const onSubmit = (data: Transaction) => {
+  const onSubmit = (data: TransactionFormData) => {
     console.log(data);
+    handleCreateTransaction(data);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* select transaction type */}
-        <div className="space-y-2 w-1/2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Type</label>
           <Select
             onValueChange={(value: "EXPENSE" | "INCOME") =>
-              setValue("accountType", value)
+              setValue("transactionType", value)
             }
-            defaultValue={accountType}
+            defaultValue={transactionType}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
@@ -91,18 +129,20 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
-          {errors.accountType && (
-            <p className="text-sm text-red-500">{errors.accountType.message}</p>
+          {errors.transactionType && (
+            <p className="text-sm text-red-500">
+              {errors.transactionType.message}
+            </p>
           )}
         </div>
         {/* Category */}
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Category</label>
           <Select
             onValueChange={(value) => setValue("category", value)}
             defaultValue={getValues("category")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -127,20 +167,20 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             type="number"
             step="0.01"
             placeholder="0.00"
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
           />
           {errors.amount && (
             <p className="text-sm text-red-500">{errors.amount.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Account</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
             defaultValue={getValues("accountId")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +217,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground",
+                !date && "text-muted-foreground"
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -187,9 +227,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
-              selected={date}
+              selected={
+                typeof date === "string"
+                  ? date
+                    ? new Date(date)
+                    : undefined
+                  : date
+              }
               onSelect={(date) => {
-                if (date instanceof Date) setValue("date", date);
+                if (date instanceof Date) setValue("date", date.toISOString());
               }}
               disabled={(date) =>
                 date > new Date() || date < new Date("1900-01-01")
