@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, PenBox } from "lucide-react";
+import { LayoutDashboard, LogOut, PenBox, User } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui/button";
@@ -8,7 +8,8 @@ import { useRouter } from "next/router";
 
 const Header = () => {
   const router = useRouter();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, userInfo } = useAuth();
+  const { name, email } = userInfo || {};
   return (
     <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -89,10 +90,17 @@ const Header = () => {
               >
                 <div className="flex flex-col">
                   <div className="px-4 py-3 border-b">
-                    <span className="font-medium text-gray-800">John Doe</span>
-                    <span className="block text-xs text-gray-500">
-                      john@gamai.com
-                    </span>
+                    <div className="flex gap-2 items-center">
+                      <User className="h-6 w-6 text-gray-600" />
+                      <div>
+                        <span className="font-medium text-gray-800">
+                          {name}
+                        </span>
+                        <span className="block text-xs text-gray-500">
+                          {email}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
@@ -102,7 +110,7 @@ const Header = () => {
                       router.push("/auth/sign-in");
                     }}
                   >
-                    Logout
+                    <LogOut /> Logout
                   </Button>
                 </div>
               </PopoverContent>
