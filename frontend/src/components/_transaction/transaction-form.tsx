@@ -55,7 +55,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === transactionType
+    (category) => category.type === transactionType,
   );
 
   useEffect(() => {
@@ -86,16 +86,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           toast.error(message);
           console.error("Transaction creation failed:", response);
         }
-      } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err?.message ||
-          "Error creating transaction";
+      } catch (err) {
+        const message = "Error creating transaction";
         toast.error(message);
         console.error("Error creating transaction:", err);
       }
     },
-    [post, reset]
+    [post, reset],
   );
 
   // onSubmit handler
@@ -211,7 +208,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground"
+                !date && "text-muted-foreground",
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
