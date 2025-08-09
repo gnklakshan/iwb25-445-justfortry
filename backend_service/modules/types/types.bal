@@ -126,10 +126,10 @@ public type NewTransactionRequest record {|
     string date;
     string category;
     boolean isRecurring;
-    RecurringInterval? recurringInterval;
-    string receiptUrl;
-    string lastProcessed;
-    TransactionStatus transactionStatus;
+    RecurringInterval recurringInterval?;
+    string receiptUrl?;
+    string lastProcessed?;
+    TransactionStatus status;
 |};
 
 public type dbTransactionUpdate record {|
