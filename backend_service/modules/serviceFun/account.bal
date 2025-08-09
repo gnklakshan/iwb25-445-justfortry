@@ -320,7 +320,7 @@ public isolated function updateTransaction(http:Request request, string transact
         isRecurring: updateRequest.isRecurring,
         recurringInterval: recurringIntervalStr,
         nextRecurringDate: nextRecurringDateStr,
-        lastProcessed: updateRequest.lastProcessed,
+        lastProcessed: updateRequest.date,
         status: statusStr
     };
 
