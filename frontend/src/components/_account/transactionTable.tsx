@@ -74,6 +74,12 @@ const categoryColors = (category: string): string => {
   }
 };
 
+const statusColor = {
+  PENDING: "bg-amber-100/50",
+  COMPLETED: "bg-green-100/50",
+  FAILED: "bg-red-100/50",
+};
+
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   deleteTransaction,
@@ -96,14 +102,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter((transaction) =>
-        transaction.description?.toLowerCase().includes(searchLower),
+        transaction.description?.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply type filter
     if (typeFilter) {
       result = result.filter(
-        (transaction) => transaction.transactionType === typeFilter,
+        (transaction) => transaction.transactionType === typeFilter
       );
     }
 
@@ -141,13 +147,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   // Pagination calculations
   const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / ITEMS_PER_PAGE,
+    filteredAndSortedTransactions.length / ITEMS_PER_PAGE
   );
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredAndSortedTransactions.slice(
       startIndex,
-      startIndex + ITEMS_PER_PAGE,
+      startIndex + ITEMS_PER_PAGE
     );
   }, [filteredAndSortedTransactions, currentPage]);
 
@@ -168,7 +174,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setSelectedIds((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
-        : [...current, id],
+        : [...current, id]
     );
   };
 
@@ -176,12 +182,26 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setSelectedIds((current) =>
       current.length === paginatedTransactions.length
         ? []
-        : paginatedTransactions.map((t) => t.id),
+        : paginatedTransactions.map((t) => t.id)
     );
   };
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end gap-4 pb-2">
+        {[
+          { color: "bg-amber-100/50 border-amber-300", label: "Pending" },
+          { color: "bg-green-100/50 border-green-300", label: "Completed" },
+          { color: "bg-red-100/50 border-red-300", label: "Failed" },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
+            <span
+              className={`inline-block h-4 w-4 rounded border ${item.color}`}
+            />
+            <span className="text-xs text-muted-foreground">{item.label}</span>
+          </div>
+        ))}
+      </div>
       {/* table */}
       <div className="rounded-md border">
         <Table>
@@ -254,111 +274,117 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIds.includes(transaction.id)}
-                      onCheckedChange={() => handleSelect(transaction.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(transaction.date), "PP")}
-                  </TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell className="capitalize">
-                    <span
-                      style={{
-                        background: categoryColors(transaction.category),
-                      }}
-                      className="px-2 py-1 rounded text-white text-sm"
-                    >
-                      {transaction.category}
-                    </span>
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right font-medium",
-                      transaction.transactionType === "EXPENSE"
-                        ? "text-red-500"
-                        : "text-green-500",
-                    )}
-                  >
-                    {transaction.transactionType === "EXPENSE" ? "-" : "+"}LKR{" "}
-                    {transaction.amount.toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    {transaction.isRecurring ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Badge
-                              variant="secondary"
-                              className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
-                            >
-                              <RefreshCw className="h-3 w-3" />
-                              {
-                                RECURRING_INTERVALS[
-                                  transaction.recurringInterval as keyof typeof RECURRING_INTERVALS
-                                ]
-                              }
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white p-2 border border-zinc-100">
-                            <div className="text-sm">
-                              <div className="font-medium">Next Date:</div>
-                              <div>
-                                {format(
-                                  new Date(transaction.nextRecurringDate ?? ""),
-                                  "PPP",
-                                )}
-                              </div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <Badge variant="outline" className="gap-1">
-                        <Clock className="h-3 w-3" />
-                        One-time
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 group"
-                          aria-label="Open menu"
-                        >
-                          <MoreHorizontal className="h-4 w-4 transition-colors group-hover:text-primary" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-white border py-1 border-zinc-200  rounded-md"
+              paginatedTransactions.map((transaction) => {
+                const stsColor =
+                  statusColor[transaction.status as keyof typeof statusColor];
+                return (
+                  <TableRow key={transaction.id} className={`${stsColor} `}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(transaction.id)}
+                        onCheckedChange={() => handleSelect(transaction.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(transaction.date), "PP")}
+                    </TableCell>
+                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell className="capitalize">
+                      <span
+                        style={{
+                          background: categoryColors(transaction.category),
+                        }}
+                        className="px-2 py-1 rounded text-white text-sm"
                       >
-                        <DropdownMenuItem
-                          onSelect={() =>
-                            router.push(`/transaction?edit=${transaction.id}`)
-                          }
-                          className="cursor-pointer px-4 hover:bg-zinc-100"
+                        {transaction.category}
+                      </span>
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        "text-right font-medium",
+                        transaction.transactionType === "EXPENSE"
+                          ? "text-red-500"
+                          : "text-green-500"
+                      )}
+                    >
+                      {transaction.transactionType === "EXPENSE" ? "-" : "+"}LKR{" "}
+                      {transaction.amount.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      {transaction.isRecurring ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              >
+                                <RefreshCw className="h-3 w-3" />
+                                {
+                                  RECURRING_INTERVALS[
+                                    transaction.recurringInterval as keyof typeof RECURRING_INTERVALS
+                                  ]
+                                }
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-white p-2 border border-zinc-100">
+                              <div className="text-sm">
+                                <div className="font-medium">Next Date:</div>
+                                <div>
+                                  {format(
+                                    new Date(
+                                      transaction.nextRecurringDate ?? ""
+                                    ),
+                                    "PPP"
+                                  )}
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Badge variant="outline" className="gap-1">
+                          <Clock className="h-3 w-3" />
+                          One-time
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 group"
+                            aria-label="Open menu"
+                          >
+                            <MoreHorizontal className="h-4 w-4 transition-colors group-hover:text-primary" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-white border py-1 border-zinc-200  rounded-md"
                         >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive px-4 cursor-pointer hover:bg-red-50"
-                          onSelect={() => deleteTransaction([transaction.id])}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              router.push(`/transaction?edit=${transaction.id}`)
+                            }
+                            className="cursor-pointer px-4 hover:bg-zinc-100"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive px-4 cursor-pointer hover:bg-red-50"
+                            onSelect={() => deleteTransaction([transaction.id])}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
