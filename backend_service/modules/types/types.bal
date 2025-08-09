@@ -156,5 +156,5 @@ public type UpdateTransactionRequest record {|
     boolean? isRecurring;
     RecurringInterval? recurringInterval;
     string? lastProcessed;
-    TransactionStatus? transactionStatus;
+    TransactionStatus? status;
 |};
