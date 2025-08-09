@@ -32,7 +32,7 @@ export type Transaction = {
   category: string;
   receiptUrl?: string;
   isRecurring: boolean;
-  recurringInterval?:  "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+  recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
   nextRecurringDate?: string;
   lastProcessed: string;
   status: string;
