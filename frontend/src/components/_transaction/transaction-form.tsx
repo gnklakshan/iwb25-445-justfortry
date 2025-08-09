@@ -48,11 +48,24 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     reset,
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      transactionType: "EXPENSE",
+      amount: 0,
+      date: new Date().toISOString(),
+      accountId: "",
+      category: "",
+      description: "",
+      isRecurring: false,
+      receiptUrl: "",
+      status: "PENDING",
+      recurringInterval: undefined,
+    },
   });
 
   const transactionType = watch("transactionType");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
+  const status = watch("status");
 
   const filteredCategories = categories.filter(
     (category) => category.type === transactionType,
@@ -80,7 +93,18 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
         const response = await post("transactions", data);
         if (response) {
           toast.success("Transaction created successfully");
-          reset();
+          reset({
+            transactionType: "EXPENSE",
+            amount: 0,
+            date: new Date().toISOString(),
+            accountId: "",
+            category: "",
+            description: "",
+            isRecurring: false,
+            receiptUrl: "",
+            status: "PENDING",
+            recurringInterval: undefined,
+          });
         } else {
           const message = response?.message || "Failed to create transaction";
           toast.error(message);
@@ -110,7 +134,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             onValueChange={(value: "EXPENSE" | "INCOME") =>
               setValue("transactionType", value)
             }
-            defaultValue={transactionType}
+            value={transactionType || "EXPENSE"}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select type" />
@@ -138,7 +162,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             </SelectTrigger>
             <SelectContent>
               {filteredCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
+                <SelectItem key={category.id} value={category.name}>
                   {category.name}
                 </SelectItem>
               ))}
@@ -169,7 +193,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           <label className="text-sm font-medium">Account</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
-            defaultValue={getValues("accountId")}
+            value={watch("accountId") || ""}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select account" />
@@ -177,7 +201,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             <SelectContent>
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${account.balance.toFixed(2)})
+                  {account.name} (LKR {account.balance.toFixed(2)})
                 </SelectItem>
               ))}
               <NewAccountDrawer
@@ -200,44 +224,70 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
       </div>
 
       {/* Date */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Date</label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground",
-              )}
-            >
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={
-                typeof date === "string"
-                  ? date
-                    ? new Date(date)
-                    : undefined
-                  : date
-              }
-              onSelect={(date) => {
-                if (date instanceof Date) setValue("date", date.toISOString());
-              }}
-              disabled={(date) =>
-                date > new Date() || date < new Date("1900-01-01")
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-        {errors.date && (
-          <p className="text-sm text-red-500">{errors.date.message}</p>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Date</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full pl-3 text-left font-normal",
+                  !date && "text-muted-foreground",
+                )}
+              >
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={
+                  typeof date === "string"
+                    ? date
+                      ? new Date(date)
+                      : undefined
+                    : date
+                }
+                onSelect={(date) => {
+                  if (date instanceof Date)
+                    setValue("date", date.toISOString());
+                }}
+                disabled={(date) =>
+                  date > new Date() || date < new Date("1900-01-01")
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {errors.date && (
+            <p className="text-sm text-red-500">{errors.date.message}</p>
+          )}
+        </div>
+
+        {/* status */}
+        <div className="space-y-2 w-full">
+          <label className="text-sm font-medium">Transaction Status</label>
+          <Select
+            onValueChange={(value: "PENDING" | "COMPLETED" | "FAILED") =>
+              setValue("status", value)
+            }
+            value={status || "PENDING"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+              <SelectItem value="FAILED">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.status && (
+            <p className="text-sm text-red-500">{errors.status.message}</p>
+          )}
+        </div>
       </div>
 
       {/* Description */}

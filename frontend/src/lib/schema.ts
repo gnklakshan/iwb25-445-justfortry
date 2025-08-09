@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import { z } from "zod";
 
 export const accountSchema = z.object({
@@ -34,13 +35,14 @@ export const transactionSchema = z
   .object({
     transactionType: z.enum(["INCOME", "EXPENSE"]),
     amount: z.number().positive("Amount must be positive"),
-    date: z.string(),
+    date: z.string().min(1, "Date is required"),
     accountId: z.string().min(1, "Account is required"),
     category: z.string().min(1, "Category is required"),
     description: z.string().optional(),
-    isRecurring: z.boolean().optional(),
-    receiptUrl: z.string().url().optional(),
+    isRecurring: z.boolean(),
+    receiptUrl: z.string().url().optional().or(z.literal("")),
     nextRecurringDate: z.string().optional(),
+    status: z.enum(["PENDING", "COMPLETED", "FAILED"]),
     recurringInterval: z
       .enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
       .optional(),
@@ -48,7 +50,7 @@ export const transactionSchema = z
   .refine(
     (data) => {
       // If isRecurring is true, recurringInterval must be provided
-      if (data.isRecurring && !data.recurringInterval) {
+      if (data.isRecurring === true && !data.recurringInterval) {
         return false;
       }
       return true;
