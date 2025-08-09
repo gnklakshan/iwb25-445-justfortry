@@ -218,6 +218,21 @@ public isolated function updateAccountStatus(string accountId, string userId, bo
     return;
 }
 
+isolated function updateAccountBalance(string userId, string transactionType, decimal amount, string accountId) returns error? {
+    decimal transactionAmount = transactionType == "EXPENSE" ? -amount : amount;
+
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        UPDATE accounts
+        SET balance = balance + ${transactionAmount}
+        WHERE id = ${accountId} AND userId = ${userId}
+    `);
+
+    if result is sql:Error {
+        return error("Failed to update account balance: " + result.message());
+    }
+    return;
+}
+
 public isolated function addTransaction(types:Transaction trans) returns error? {
     string createdAtStr = time:utcToString(trans.createdAt);
     string updatedAtStr = time:utcToString(trans.updatedAt);
@@ -233,11 +248,22 @@ public isolated function addTransaction(types:Transaction trans) returns error? 
     if result is sql:Error {
         return error("Failed to add transaction: " + result.message());
     }
+    if trans.status === "COMPLETED" {
+        // Update account balance if transaction is completed
+        check updateAccountBalance(trans.userId, trans.transactionType, trans.amount, trans.accountId);
+    }
+
     return;
 }
 
 public isolated function updateTransaction(string transactionId, string userId, types:dbTransactionUpdate updateRequest) returns types:Transaction|error {
     string updatedAtStr = time:utcToString(time:utcNow());
+
+    //get previous transactions
+    types:Transaction|error previousTransaction = fetchTransactionById(transactionId, userId);
+    if previousTransaction is error {
+        return error("Failed to fetch previous transaction: " + previousTransaction.message());
+    }
 
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         UPDATE transactions
@@ -258,6 +284,42 @@ public isolated function updateTransaction(string transactionId, string userId, 
 
     if result is sql:Error {
         return error("Failed to update transaction: " + result.message());
+    }
+
+    // //compare previous amount,type and status and then update the account balance
+    boolean isAmountChanged = previousTransaction.amount != updateRequest.amount;
+    boolean isTypeChanged = previousTransaction.transactionType != updateRequest.transactionType;
+    boolean isStatusChanged = previousTransaction.status != updateRequest.status;
+
+    boolean wasCompleted = previousTransaction.status == "COMPLETED";
+    boolean isNowCompleted = updateRequest.status == "COMPLETED";
+
+    if isAmountChanged || isTypeChanged || isStatusChanged {
+        if isStatusChanged {
+            if wasCompleted {
+                // Revert previous completed transaction
+                decimal revertAmount = previousTransaction.transactionType == "INCOME"
+                    ? -previousTransaction.amount : previousTransaction.amount;
+                check updateAccountBalance(userId, previousTransaction.transactionType, revertAmount, previousTransaction.accountId);
+            }
+            if isNowCompleted {
+                // Apply new completed transaction
+                decimal applyAmount = updateRequest.transactionType == "INCOME"
+                    ? updateRequest.amount ?: 0.0 : -(updateRequest.amount ?: 0.0);
+                check updateAccountBalance(userId, <string>updateRequest.transactionType, applyAmount, previousTransaction.accountId);
+            }
+        } else if wasCompleted {
+            // Status unchanged but transaction was completed
+            // Revert old transaction
+            decimal revertAmount = previousTransaction.transactionType == "INCOME"
+                ? -previousTransaction.amount : previousTransaction.amount;
+            check updateAccountBalance(userId, previousTransaction.transactionType, revertAmount, previousTransaction.accountId);
+
+            // Apply new transaction
+            decimal applyAmount = updateRequest.transactionType == "INCOME"
+                ? updateRequest.amount ?: 0.0 : -(updateRequest.amount ?: 0.0);
+            check updateAccountBalance(userId, <string>updateRequest.transactionType, applyAmount, previousTransaction.accountId);
+        }
     }
 
     types:Transaction|error updatedTransaction = fetchTransactionById(transactionId, userId);
