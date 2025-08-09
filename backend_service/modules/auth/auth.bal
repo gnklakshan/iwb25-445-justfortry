@@ -29,7 +29,9 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
         return {
             success: false,
             message: INVALID_EMAIL_FORMAT,
-            token: ()
+            token: (),
+            email: email,
+            name: ()
         };
     }
 
@@ -37,7 +39,9 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
         return {
             success: false,
             message: PASSWORD_TOO_SHORT,
-            token: ()
+            token: (),
+            email: email,
+            name: signupRequest.name
         };
     }
 
@@ -51,7 +55,9 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
         return {
             success: false,
             message: USER_ALREADY_EXISTS,
-            token: ()
+            token: (),
+            email: email,
+            name: signupRequest.name
         };
     }
 
@@ -81,7 +87,9 @@ public isolated function signupUser(types:SignupRequest signupRequest) returns t
     return {
         success: true,
         message: "Account created successfully! You can now log in.",
-        token: ()
+        token: (),
+        email: email,
+        name: signupRequest.name
     };
 }
 
@@ -95,7 +103,9 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
         return {
             success: false,
             message: INVALID_EMAIL_FORMAT,
-            token: ()
+            token: (),
+            email: email,
+            name: ()
         };
     }
 
@@ -105,7 +115,9 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
         return {
             success: false,
             message: INVALID_CREDENTIALS,
-            token: ()
+            token: (),
+            email: email,
+            name: ()
         };
     }
 
@@ -120,7 +132,9 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
         return {
             success: false,
             message: INVALID_CREDENTIALS,
-            token: ()
+            token: (),
+            email: email,
+            name: ()
         };
     }
 
@@ -134,7 +148,9 @@ public isolated function loginUser(types:LoginRequest loginRequest) returns type
     return {
         success: true,
         message: "Login successful",
-        token: token
+        token: token,
+        email: email,
+        name: user.name
     };
 }
 

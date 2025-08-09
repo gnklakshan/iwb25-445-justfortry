@@ -33,6 +33,8 @@ public type AuthResponse record {|
     boolean success;
     string message;
     string? token;
+    string? name;
+    string? email;
 |};
 
 # JWT payload
