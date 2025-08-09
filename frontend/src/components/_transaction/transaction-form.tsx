@@ -75,7 +75,7 @@ const TransactionForm: React.FC = () => {
   }, [watch]);
 
   const filteredCategories = categories.filter(
-    (category) => category.type === transactionType
+    (category) => category.type === transactionType,
   );
 
   const fetchAccounts = useCallback(async () => {
@@ -124,7 +124,7 @@ const TransactionForm: React.FC = () => {
         console.error("Error creating transaction:", err);
       }
     },
-    [post, reset]
+    [post, reset],
   );
 
   useEffect(() => {
@@ -273,7 +273,7 @@ const TransactionForm: React.FC = () => {
                 variant="outline"
                 className={cn(
                   "w-full pl-3 text-left font-normal",
-                  !date && "text-muted-foreground"
+                  !date && "text-muted-foreground",
                 )}
               >
                 {date ? format(date, "PPP") : <span>Pick a date</span>}

@@ -102,14 +102,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter((transaction) =>
-        transaction.description?.toLowerCase().includes(searchLower)
+        transaction.description?.toLowerCase().includes(searchLower),
       );
     }
 
     // Apply type filter
     if (typeFilter) {
       result = result.filter(
-        (transaction) => transaction.transactionType === typeFilter
+        (transaction) => transaction.transactionType === typeFilter,
       );
     }
 
@@ -147,13 +147,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   // Pagination calculations
   const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / ITEMS_PER_PAGE
+    filteredAndSortedTransactions.length / ITEMS_PER_PAGE,
   );
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredAndSortedTransactions.slice(
       startIndex,
-      startIndex + ITEMS_PER_PAGE
+      startIndex + ITEMS_PER_PAGE,
     );
   }, [filteredAndSortedTransactions, currentPage]);
 
@@ -174,7 +174,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setSelectedIds((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
-        : [...current, id]
+        : [...current, id],
     );
   };
 
@@ -182,7 +182,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setSelectedIds((current) =>
       current.length === paginatedTransactions.length
         ? []
-        : paginatedTransactions.map((t) => t.id)
+        : paginatedTransactions.map((t) => t.id),
     );
   };
 
@@ -304,7 +304,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         "text-right font-medium",
                         transaction.transactionType === "EXPENSE"
                           ? "text-red-500"
-                          : "text-green-500"
+                          : "text-green-500",
                       )}
                     >
                       {transaction.transactionType === "EXPENSE" ? "-" : "+"}LKR{" "}
@@ -333,9 +333,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                                 <div>
                                   {format(
                                     new Date(
-                                      transaction.nextRecurringDate ?? ""
+                                      transaction.nextRecurringDate ?? "",
                                     ),
-                                    "PPP"
+                                    "PPP",
                                   )}
                                 </div>
                               </div>
@@ -367,7 +367,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           <DropdownMenuItem
                             onSelect={() =>
                               router.push(
-                                `/transaction?edit=true&transactionId=${transaction.id}`
+                                `/transaction?edit=true&transactionId=${transaction.id}`,
                               )
                             }
                             className="cursor-pointer px-4 hover:bg-zinc-100"
