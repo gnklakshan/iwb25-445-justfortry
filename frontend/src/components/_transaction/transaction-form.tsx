@@ -23,13 +23,12 @@ import { format } from "date-fns";
 import useAxios from "@/hooks/useAxios";
 import { toast } from "sonner";
 
-type TransactionFormProps = {
-  editMode?: boolean;
-};
-
-const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
+const TransactionForm: React.FC = () => {
   const router = useRouter();
-  const { post, get, loading, error } = useAxios();
+  const { post, get, patch, loading, error } = useAxios();
+  const { isEdit, create, transactionId } = router.query;
+  const editMode = isEdit === "true" || create !== "true";
+  const id = transactionId ? transactionId : null;
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -67,30 +66,39 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const date = watch("date");
   const status = watch("status");
 
+  console.log(isRecurring);
+  useEffect(() => {
+    const subscription = watch((value) => {
+      console.log("Form data:", value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
   const filteredCategories = categories.filter(
     (category) => category.type === transactionType,
   );
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await get("/accounts");
-        if (response.success) {
-          setAccounts(response.data);
-        }
-      } catch (err) {
-        console.error("Error fetching accounts:", error, err);
-        toast.error("Failed to load accounts");
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const response = await get("/accounts");
+      if (response.success) {
+        setAccounts(response.data);
       }
-    };
-    fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    } catch (err) {
+      console.error("Error fetching accounts:", error, err);
+      toast.error("Failed to load accounts");
+    }
+  }, [get]);
 
   const handleCreateTransaction = useCallback(
     async (data: TransactionFormData) => {
       try {
-        const response = await post("transactions", data);
+        let response = {};
+        if (editMode && id) {
+          response = await patch(`transactions/${id}`, data);
+        } else {
+          response = await post("transactions", data);
+        }
         if (response) {
           toast.success("Transaction created successfully");
           reset({
@@ -106,7 +114,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             recurringInterval: undefined,
           });
         } else {
-          const message = response?.message || "Failed to create transaction";
+          const message = "Failed to create transaction";
           toast.error(message);
           console.error("Transaction creation failed:", response);
         }
@@ -118,6 +126,38 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     },
     [post, reset],
   );
+
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchAccounts(); // first get accounts
+      if (editMode && transactionId) {
+        try {
+          const response = await get(`transactions/${transactionId}`);
+          if (response) {
+            const tx = response;
+            reset({
+              transactionType: tx.transactionType,
+              amount: Number(tx.amount),
+              date: tx.date
+                ? new Date(tx.date).toISOString()
+                : new Date().toISOString(),
+              accountId: tx.accountId,
+              category: tx.category || "",
+              description: tx.description || "",
+              isRecurring: Boolean(tx.isRecurring),
+              receiptUrl: tx.receiptUrl || "",
+              status: tx.status,
+              recurringInterval: tx.recurringInterval ?? undefined,
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching transaction:", error, err);
+          toast.error("Failed to load transaction data");
+        }
+      }
+    };
+    loadData();
+  }, [editMode, transactionId, fetchAccounts, get, reset]);
 
   // onSubmit handler
   const onSubmit = (data: TransactionFormData) => {
@@ -155,7 +195,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
           <label className="text-sm font-medium">Category</label>
           <Select
             onValueChange={(value) => setValue("category", value)}
-            defaultValue={getValues("category")}
+            value={watch("category") || ""}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
@@ -195,7 +235,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             onValueChange={(value) => setValue("accountId", value)}
             value={watch("accountId") || ""}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" onClick={fetchAccounts}>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>

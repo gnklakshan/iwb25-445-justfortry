@@ -149,6 +149,7 @@ public type dbTransactionUpdate record {|
 |};
 
 public type UpdateTransactionRequest record {|
+    string accountId;
     string? transactionType;
     decimal? amount;
     string? description;
@@ -157,6 +158,6 @@ public type UpdateTransactionRequest record {|
     string? receiptUrl;
     boolean? isRecurring;
     RecurringInterval? recurringInterval;
-    string? lastProcessed;
+    // string? lastProcessed;
     TransactionStatus? status;
 |};
