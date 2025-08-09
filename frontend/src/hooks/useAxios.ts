@@ -85,7 +85,7 @@ const useAxios = <T>() => {
         // Create a new error with the message attached
         const apiError = new Error(errorMessage);
         (apiError as any).response = err.response;
-        throw apiError;
+        // throw apiError;
       } finally {
         if (method === "GET") {
           setGetLoading(false);

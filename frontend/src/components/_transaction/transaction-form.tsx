@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
 } from "../ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { transactionSchema } from "@/lib/schema";
+import { TransactionFormData, transactionSchema } from "@/lib/schema";
 import { Account } from "@/types/types";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -20,31 +20,23 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "../ui/calendar";
 import { useRouter } from "next/router";
 import { format } from "date-fns";
+import useAxios from "@/hooks/useAxios";
+import { toast } from "sonner";
 
 type TransactionFormProps = {
   editMode?: boolean;
 };
 
-type Transaction = {
-  accountType: "EXPENSE" | "INCOME";
-  amount: string;
-  description?: string;
-  date: Date;
-  accountId: string;
-  category: string;
-  isRecurring?: boolean;
-  recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-};
-
 const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const router = useRouter();
+  const { post, get, loading, error } = useAxios();
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const accounts: Account[] = [];
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const categories = [
     { id: "1", name: "Food", type: "EXPENSE" },
     { id: "2", name: "Salary", type: "INCOME" },
   ];
-  const loading = false;
 
   const {
     register,
@@ -54,36 +46,97 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
     setValue,
     getValues,
     reset,
-  } = useForm<Transaction>({
+  } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      transactionType: "EXPENSE",
+      amount: 0,
+      date: new Date().toISOString(),
+      accountId: "",
+      category: "",
+      description: "",
+      isRecurring: false,
+      receiptUrl: "",
+      status: "PENDING",
+      recurringInterval: undefined,
+    },
   });
 
-  const accountType = watch("accountType");
+  const transactionType = watch("transactionType");
   const isRecurring = watch("isRecurring");
   const date = watch("date");
+  const status = watch("status");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === accountType,
+    (category) => category.type === transactionType,
+  );
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await get("/accounts");
+        if (response.success) {
+          setAccounts(response.data);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts:", error, err);
+        toast.error("Failed to load accounts");
+      }
+    };
+    fetchAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreateTransaction = useCallback(
+    async (data: TransactionFormData) => {
+      try {
+        const response = await post("transactions", data);
+        if (response) {
+          toast.success("Transaction created successfully");
+          reset({
+            transactionType: "EXPENSE",
+            amount: 0,
+            date: new Date().toISOString(),
+            accountId: "",
+            category: "",
+            description: "",
+            isRecurring: false,
+            receiptUrl: "",
+            status: "PENDING",
+            recurringInterval: undefined,
+          });
+        } else {
+          const message = response?.message || "Failed to create transaction";
+          toast.error(message);
+          console.error("Transaction creation failed:", response);
+        }
+      } catch (err) {
+        const message = "Error creating transaction";
+        toast.error(message);
+        console.error("Error creating transaction:", err);
+      }
+    },
+    [post, reset],
   );
 
   // onSubmit handler
-  const onSubmit = (data: Transaction) => {
-    console.log(data);
+  const onSubmit = (data: TransactionFormData) => {
+    handleCreateTransaction(data);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* select transaction type */}
-        <div className="space-y-2 w-1/2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Type</label>
           <Select
             onValueChange={(value: "EXPENSE" | "INCOME") =>
-              setValue("accountType", value)
+              setValue("transactionType", value)
             }
-            defaultValue={accountType}
+            value={transactionType || "EXPENSE"}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
@@ -91,23 +144,25 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
-          {errors.accountType && (
-            <p className="text-sm text-red-500">{errors.accountType.message}</p>
+          {errors.transactionType && (
+            <p className="text-sm text-red-500">
+              {errors.transactionType.message}
+            </p>
           )}
         </div>
         {/* Category */}
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Category</label>
           <Select
             onValueChange={(value) => setValue("category", value)}
             defaultValue={getValues("category")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
               {filteredCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
+                <SelectItem key={category.id} value={category.name}>
                   {category.name}
                 </SelectItem>
               ))}
@@ -127,26 +182,26 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
             type="number"
             step="0.01"
             placeholder="0.00"
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
           />
           {errors.amount && (
             <p className="text-sm text-red-500">{errors.amount.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">Account</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
-            defaultValue={getValues("accountId")}
+            value={watch("accountId") || ""}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${account.balance.toFixed(2)})
+                  {account.name} (LKR {account.balance.toFixed(2)})
                 </SelectItem>
               ))}
               <NewAccountDrawer
@@ -169,38 +224,70 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
       </div>
 
       {/* Date */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Date</label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground",
-              )}
-            >
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(date) => {
-                if (date instanceof Date) setValue("date", date);
-              }}
-              disabled={(date) =>
-                date > new Date() || date < new Date("1900-01-01")
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-        {errors.date && (
-          <p className="text-sm text-red-500">{errors.date.message}</p>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Date</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full pl-3 text-left font-normal",
+                  !date && "text-muted-foreground",
+                )}
+              >
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={
+                  typeof date === "string"
+                    ? date
+                      ? new Date(date)
+                      : undefined
+                    : date
+                }
+                onSelect={(date) => {
+                  if (date instanceof Date)
+                    setValue("date", date.toISOString());
+                }}
+                disabled={(date) =>
+                  date > new Date() || date < new Date("1900-01-01")
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {errors.date && (
+            <p className="text-sm text-red-500">{errors.date.message}</p>
+          )}
+        </div>
+
+        {/* status */}
+        <div className="space-y-2 w-full">
+          <label className="text-sm font-medium">Transaction Status</label>
+          <Select
+            onValueChange={(value: "PENDING" | "COMPLETED" | "FAILED") =>
+              setValue("status", value)
+            }
+            value={status || "PENDING"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+              <SelectItem value="FAILED">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.status && (
+            <p className="text-sm text-red-500">{errors.status.message}</p>
+          )}
+        </div>
       </div>
 
       {/* Description */}

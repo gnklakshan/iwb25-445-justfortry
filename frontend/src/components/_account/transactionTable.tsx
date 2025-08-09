@@ -309,7 +309,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                               <div className="font-medium">Next Date:</div>
                               <div>
                                 {format(
-                                  new Date(transaction.nextRecurringDate),
+                                  new Date(transaction.nextRecurringDate ?? ""),
                                   "PPP",
                                 )}
                               </div>
