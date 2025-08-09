@@ -50,7 +50,12 @@ const Header = () => {
                 <span className="hidden md:inline">Dashboard</span>
               </Button>
 
-              <Button className="flex items-center gap-2" onClick={() => {}}>
+              <Button
+                className="flex items-center gap-2"
+                onClick={() => {
+                  router.push("/transaction?create=true");
+                }}
+              >
                 <PenBox size={18} />
                 <span className="hidden md:inline">Add Transaction</span>
               </Button>

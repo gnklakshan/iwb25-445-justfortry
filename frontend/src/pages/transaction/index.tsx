@@ -1,27 +1,11 @@
 import TransactionForm from "@/components/_transaction/transaction-form";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React from "react";
 
-const NewTransaction = () => {
+const NewTransaction: React.FC = () => {
   const router = useRouter();
-  const setQueryParam = (key: string, value: string) => {
-    router.replace(
-      {
-        pathname: router.pathname,
-        query: { [key]: value },
-      },
-      undefined,
-      { shallow: true },
-    );
-  };
-  const isEdit = true;
-  useEffect(() => {
-    if (isEdit) {
-      setQueryParam("edit", "true");
-    } else {
-      setQueryParam("create", "true");
-    }
-  }, [isEdit]);
+  const { isEdit, create } = router.query;
+  const isEditMode = isEdit === "true" || create !== "true";
 
   return (
     <div className="mt-28 max-w-3xl mx-auto px-5">
@@ -30,7 +14,7 @@ const NewTransaction = () => {
           Add Transaction
         </h1>
       </div>
-      <TransactionForm editMode={isEdit} />
+      <TransactionForm editMode={isEditMode} />
     </div>
   );
 };
