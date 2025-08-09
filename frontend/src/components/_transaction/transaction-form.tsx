@@ -8,7 +8,7 @@ import {
 } from "../ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { transactionSchema } from "@/lib/schema";
+import { TransactionFormData, transactionSchema } from "@/lib/schema";
 import { Account } from "@/types/types";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -23,20 +23,20 @@ import { format } from "date-fns";
 import useAxios from "@/hooks/useAxios";
 import { toast } from "sonner";
 
-type TransactionFormData = {
-  transactionType: "EXPENSE" | "INCOME";
-  accountId: string;
-  amount: number;
-  description: string;
-  date: string;
-  category: string;
-  receiptUrl?: string;
-  isRecurring: boolean;
-  recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-  nextRecurringDate?: string;
-  lastProcessed: string;
-  status: string;
-};
+// type TransactionFormData = {
+//   transactionType: "EXPENSE" | "INCOME";
+//   accountId: string;
+//   amount: number;
+//   description: string;
+//   date: string;
+//   category: string;
+//   receiptUrl?: string;
+//   isRecurring: boolean;
+//   recurringInterval?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+//   nextRecurringDate?: string;
+//   lastProcessed: string;
+//   status: string;
+// };
 
 type TransactionFormProps = {
   editMode?: boolean;
@@ -70,7 +70,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
   const date = watch("date");
 
   const filteredCategories = categories.filter(
-    (category) => category.type === transactionType,
+    (category) => category.type === transactionType
   );
 
   useEffect(() => {
@@ -100,7 +100,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
         console.error("Error creating transaction:", error, err);
       }
     },
-    [post, reset, error],
+    [post, reset, error]
   );
 
   // onSubmit handler
@@ -217,7 +217,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editMode }) => {
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground",
+                !date && "text-muted-foreground"
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
