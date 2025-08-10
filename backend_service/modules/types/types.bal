@@ -88,6 +88,16 @@ public type AccountResponse record {|
     string userId;
 |};
 
+public type AccountSummeryResponse record {|
+    string id;
+    string name;
+    AccountType accountType;
+    decimal balance;
+    decimal income;
+    decimal expenses;
+    boolean isDefault;
+|};
+
 //transaction types__________________________________________________________
 public type Transaction record {|
     string id;
@@ -161,3 +171,13 @@ public type UpdateTransactionRequest record {|
     // string? lastProcessed;
     TransactionStatus? status;
 |};
+
+//----------------------------
+final map<json> DATE_RANGES = {
+    "7D": 7,
+    "1M": 30,
+    "3M": 90,
+    "6M": 180,
+    "1Y": 365,
+    "ALL": null
+};

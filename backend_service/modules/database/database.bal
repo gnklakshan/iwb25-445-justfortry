@@ -134,6 +134,35 @@ public isolated function getAccountsByUserId(string userId) returns types:Accoun
     return accountResponses;
 }
 
+public isolated function getAccountSummeryByUserId(string userId, string dateFrom) returns types:AccountSummeryResponse[]|error {
+
+    sql:ParameterizedQuery selectQuery = `
+        SELECT 
+            a.id, 
+            a.name, 
+            a.accountType, 
+            a.balance, 
+            COALESCE(SUM(CASE WHEN t.transactionType = 'INCOME' THEN t.amount ELSE 0 END), 0) AS income,
+            COALESCE(SUM(CASE WHEN t.transactionType = 'EXPENSE' THEN t.amount ELSE 0 END), 0) AS expenses,
+            a.isDefault
+        FROM accounts a
+        LEFT JOIN transactions t ON a.id = t.accountId AND t.userId = ${userId} AND t.date >= ${dateFrom}::timestamp
+        WHERE a.userId = ${userId}
+        GROUP BY a.id, a.name, a.accountType, a.balance, a.isDefault
+    `;
+
+    stream<types:AccountSummeryResponse, sql:Error?> accountStream = dbClient->query(selectQuery);
+    types:AccountSummeryResponse[] accountResponses = [];
+
+    check from types:AccountSummeryResponse account in accountStream
+        do {
+            accountResponses.push(account);
+        };
+
+    check accountStream.close();
+    return accountResponses;
+}
+
 # Get account by ID and user ID from database
 # + accountId - Account ID to search for
 # + userId - User ID to verify ownership

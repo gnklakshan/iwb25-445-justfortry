@@ -74,6 +74,30 @@ public isolated function getAllAccounts(http:Request request) returns types:Acco
     return accounts;
 }
 
+public isolated function getAllAccountsSummery(http:Request request, string dateRange) returns types:AccountSummeryResponse[]|error {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to fetch accounts summary");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    string dateFrom = time:utcToString(time:parse("2023-01-01T00:00:00Z"));
+
+    // Fetch accounts summary from database
+    types:AccountSummeryResponse[]|error accountsSummeryResult = database:getAccountSummeryByUserId(userId, dateFrom);
+    if accountsSummeryResult is error {
+        return error("Failed to fetch accounts summary. " + accountsSummeryResult.message());
+    }
+
+    types:AccountSummeryResponse[] accountsSummery = accountsSummeryResult;
+
+    return accountsSummery;
+}
+
 # Get account by ID function
 # + request - HTTP request with Authorization header
 # + accountId - Account ID to retrieve
@@ -368,6 +392,12 @@ public isolated function getTransactionById(http:Request request, string transac
 
     // Fetch transaction from database
     types:Transaction|error transactionResult = database:fetchTransactionById(transactionId, userId);
+    if transactionResult is error {
+        return error("Failed to fetch transaction. " + transactionResult.message());
+    }
+    return transactionResult;
+}
+   types:Transaction|error transactionResult = database:fetchTransactionById(transactionId, userId);
     if transactionResult is error {
         return error("Failed to fetch transaction. " + transactionResult.message());
     }
