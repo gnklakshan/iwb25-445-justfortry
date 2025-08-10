@@ -108,7 +108,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
       "Filtered transactions:",
       filtered.length,
       "out of",
-      transactions.length,
+      transactions.length
     );
 
     // Group transactions by date with better date formatting
@@ -122,7 +122,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
             expense: number;
           };
         },
-        transaction,
+        transaction
       ) => {
         let transactionDate: Date;
         try {
@@ -137,7 +137,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
         const dateKey = format(transactionDate, "yyyy-MM-dd");
         const displayDate = format(
           transactionDate,
-          range.days && range.days <= 30 ? "MMM dd" : "MMM yyyy",
+          range.days && range.days <= 30 ? "MMM dd" : "MMM yyyy"
         );
 
         if (!acc[dateKey]) {
@@ -153,7 +153,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
         }
         return acc;
       },
-      {},
+      {}
     );
 
     console.log("Grouped data:", Object.keys(grouped).length, "days");
@@ -161,7 +161,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
     // Convert to array and sort by date
     const chartData = Object.values(grouped)
       .sort(
-        (a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime(),
+        (a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime()
       )
       .map((item) => ({
         ...item,
@@ -175,7 +175,7 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
         expense: acc.expense + day.expense,
         net: acc.net + day.net,
       }),
-      { income: 0, expense: 0, net: 0 },
+      { income: 0, expense: 0, net: 0 }
     );
 
     return { filteredData: chartData, totals: periodTotals };
@@ -256,28 +256,6 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Income"
-          value={totals.income}
-          icon={TrendingUp}
-          color="text-green-600"
-        />
-        <StatCard
-          title="Total Expenses"
-          value={totals.expense}
-          icon={TrendingDown}
-          color="text-red-600"
-        />
-        <StatCard
-          title="Net Balance"
-          value={totals.net}
-          icon={DollarSign}
-          color={totals.net >= 0 ? "text-green-600" : "text-red-600"}
-        />
-      </div>
-
       {/* Chart */}
       <Card className="border border-gray-100 shadow-none mb-6">
         <CardHeader className="pb-4">
@@ -318,6 +296,27 @@ const AccountTransactionChart: React.FC<AccountTransactionChartProps> = ({
               </Select>
             </div>
           </CardTitle>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <StatCard
+              title="Total Income"
+              value={totals.income}
+              icon={TrendingUp}
+              color="text-green-600"
+            />
+            <StatCard
+              title="Total Expenses"
+              value={totals.expense}
+              icon={TrendingDown}
+              color="text-red-600"
+            />
+            <StatCard
+              title="Net Balance"
+              value={totals.net}
+              icon={DollarSign}
+              color={totals.net >= 0 ? "text-green-600" : "text-red-600"}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {filteredData.length === 0 ? (
