@@ -85,7 +85,8 @@ public isolated function getAllAccountsSummery(http:Request request, string date
     types:AuthenticatedUser authenticatedUser = authResult;
     string userId = authenticatedUser.userId;
 
-    string dateFrom = time:utcToString(time:parse("2023-01-01T00:00:00Z"));
+    // Calculate the start date based on the dateRange parameter
+    string dateFrom = calculateStartDate(dateRange);
 
     // Fetch accounts summary from database
     types:AccountSummeryResponse[]|error accountsSummeryResult = database:getAccountSummeryByUserId(userId, dateFrom);
@@ -96,6 +97,41 @@ public isolated function getAllAccountsSummery(http:Request request, string date
     types:AccountSummeryResponse[] accountsSummery = accountsSummeryResult;
 
     return accountsSummery;
+}
+
+# Calculate start date based on date range
+# + dateRange - Date range string (7D, 1M, 3M, 6M, 1Y, ALL)
+# + return - Start date string in ISO format
+isolated function calculateStartDate(string dateRange) returns string {
+    time:Utc currentTime = time:utcNow();
+    
+    // Handle "ALL" case - return a very old date to include all transactions
+    if dateRange == "ALL" {
+        return "1900-01-01T00:00:00Z";
+    }
+    
+    // Define date ranges locally
+    map<int> dateRanges = {
+        "7D": 7,
+        "1M": 30,
+        "3M": 90,
+        "6M": 180,
+        "1Y": 365
+    };
+    
+    // Get days to subtract from local dateRanges map
+    int|() daysValue = dateRanges[dateRange];
+    if daysValue is () {
+        // Default to 30 days if invalid range provided
+        time:Utc startDate = time:utcAddSeconds(currentTime, <time:Seconds>(-30 * 24 * 3600));
+        return time:utcToString(startDate);
+    }
+    
+    int days = daysValue;
+    time:Seconds secondsToSubtract = <time:Seconds>(-days * 24 * 3600);
+    time:Utc startDate = time:utcAddSeconds(currentTime, secondsToSubtract);
+    
+    return time:utcToString(startDate);
 }
 
 # Get account by ID function
@@ -218,7 +254,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
             daysToAdd = 365;
         }
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, <time:Seconds>(86400 * daysToAdd));
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     }
     if newTransaction.isRecurring == false || nextRecurringDateStr == "" {
@@ -315,7 +351,7 @@ public isolated function updateTransaction(http:Request request, string transact
             daysToAdd = 365;
         }
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, <time:Seconds>(86400 * daysToAdd));
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     } else if updateRequest.isRecurring == false {
         // If setting isRecurring to false, clear the next recurring date
@@ -392,12 +428,6 @@ public isolated function getTransactionById(http:Request request, string transac
 
     // Fetch transaction from database
     types:Transaction|error transactionResult = database:fetchTransactionById(transactionId, userId);
-    if transactionResult is error {
-        return error("Failed to fetch transaction. " + transactionResult.message());
-    }
-    return transactionResult;
-}
-   types:Transaction|error transactionResult = database:fetchTransactionById(transactionId, userId);
     if transactionResult is error {
         return error("Failed to fetch transaction. " + transactionResult.message());
     }

@@ -172,12 +172,3 @@ public type UpdateTransactionRequest record {|
     TransactionStatus? status;
 |};
 
-//----------------------------
-final map<json> DATE_RANGES = {
-    "7D": 7,
-    "1M": 30,
-    "3M": 90,
-    "6M": 180,
-    "1Y": 365,
-    "ALL": null
-};

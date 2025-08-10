@@ -149,7 +149,7 @@ Deletes multiple transactions.
 }
 ```
 
-### `get /accounts?date-range={range}`
+### `get /accounts/summary?date-range={range}`
 
 get accounts summerized details for requested time period.
 
