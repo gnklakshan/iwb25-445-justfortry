@@ -1,3 +1,4 @@
+import AccountTransactionChart from "@/components/_account/accountTransactionChart";
 import TransactionTable from "@/components/_account/transactionTable";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import useAxios from "@/hooks/useAxios";
@@ -84,8 +85,12 @@ const AccountDetails = () => {
               </div>
             </div>
 
-            {/* transaction Table */}
+            {/* account transaction chart */}
+            <AccountTransactionChart
+              transactions={accountDetails.transactions}
+            />
 
+            {/* transaction Table */}
             <TransactionTable
               transactions={accountDetails.transactions}
               deleteTransaction={() => {}}
