@@ -206,6 +206,39 @@ service / on new http:Listener(9090) {
         return response;
     }
 
+    isolated resource function get accounts/summary(http:Request request, string dateRange) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:AccountSummeryResponse[]|error accountsSummeryResult = serviceFun:getAllAccountsSummery(request, dateRange);
+
+        if accountsSummeryResult is error {
+            string errorMessage = accountsSummeryResult.message();
+
+            // Check if it's an authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            // Generic error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        json response = {
+            "success": true,
+            "data": accountsSummeryResult.toJson()
+        };
+
+        return response;
+    }
+
     # Get single account by ID endpoint with transactions
     # Requires valid JWT token in Authorization header
     # + request - HTTP request with Authorization header

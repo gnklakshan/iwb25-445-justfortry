@@ -149,6 +149,28 @@ Deletes multiple transactions.
 }
 ```
 
+### `get /accounts/summary?date-range={range}`
+
+get accounts summerized details for requested time period.
+
+**Response:**
+
+```json
+{
+  "success": "boolean"
+  "data":[
+    {
+      "id": "string",
+      "name": "string",
+      "accountType": "string",
+      "balance": "number",
+      "income": "number",
+      "expenses": "number",
+    }
+  ]
+}
+```
+
 ---
 
 ## Transactions API

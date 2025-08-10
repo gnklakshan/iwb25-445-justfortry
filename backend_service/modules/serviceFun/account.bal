@@ -74,10 +74,65 @@ public isolated function getAllAccounts(http:Request request) returns types:Acco
     return accounts;
 }
 
+public isolated function getAllAccountsSummery(http:Request request, string dateRange) returns types:AccountSummeryResponse[]|error {
+    // Validate authorization header using utility function
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to fetch accounts summary");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // Calculate the start date based on the dateRange parameter
+    string dateFrom = calculateStartDate(dateRange);
+
+    // Fetch accounts summary from database
+    types:AccountSummeryResponse[]|error accountsSummeryResult = database:getAccountSummeryByUserId(userId, dateFrom);
+    if accountsSummeryResult is error {
+        return error("Failed to fetch accounts summary. " + accountsSummeryResult.message());
+    }
+
+    types:AccountSummeryResponse[] accountsSummery = accountsSummeryResult;
+
+    return accountsSummery;
+}
+
+# Calculate start date based on date range
+isolated function calculateStartDate(string dateRange) returns string {
+    time:Utc currentTime = time:utcNow();
+
+    //  "ALL" 
+    if dateRange == "ALL" {
+        return "1900-01-01T00:00:00Z";
+    }
+
+    // Define date ranges locally
+    map<int> dateRanges = {
+        "7D": 7,
+        "1M": 30,
+        "3M": 90,
+        "6M": 180,
+        "1Y": 365
+    };
+
+    // Get days to subtract
+    int|() daysValue = dateRanges[dateRange];
+    if daysValue is () {
+        // Default to 30 days if invalid range provided
+        time:Utc startDate = time:utcAddSeconds(currentTime, <time:Seconds>(-30 * 24 * 3600));
+        return time:utcToString(startDate);
+    }
+
+    int days = daysValue;
+    time:Seconds secondsToSubtract = <time:Seconds>(-days * 24 * 3600);
+    time:Utc startDate = time:utcAddSeconds(currentTime, secondsToSubtract);
+
+    return time:utcToString(startDate);
+}
+
 # Get account by ID function
-# + request - HTTP request with Authorization header
-# + accountId - Account ID to retrieve
-# + return - Account response or error
 public isolated function getAccountById(http:Request request, string accountId) returns types:AccountResponse|error {
     // Validate authorization header using utility function
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
@@ -194,7 +249,7 @@ public isolated function createNewTransaction(http:Request request, types:NewTra
             daysToAdd = 365;
         }
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, <time:Seconds>(86400 * daysToAdd));
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     }
     if newTransaction.isRecurring == false || nextRecurringDateStr == "" {
@@ -291,7 +346,7 @@ public isolated function updateTransaction(http:Request request, string transact
             daysToAdd = 365;
         }
 
-        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, 86400 * daysToAdd);
+        time:Utc nextRecurringDate = time:utcAddSeconds(currentTime, <time:Seconds>(86400 * daysToAdd));
         nextRecurringDateStr = time:utcToString(nextRecurringDate);
     } else if updateRequest.isRecurring == false {
         // If setting isRecurring to false, clear the next recurring date

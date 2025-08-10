@@ -88,6 +88,16 @@ public type AccountResponse record {|
     string userId;
 |};
 
+public type AccountSummeryResponse record {|
+    string id;
+    string name;
+    AccountType accountType;
+    decimal balance;
+    decimal income;
+    decimal expenses;
+    boolean isDefault;
+|};
+
 //transaction types__________________________________________________________
 public type Transaction record {|
     string id;
@@ -161,3 +171,4 @@ public type UpdateTransactionRequest record {|
     // string? lastProcessed;
     TransactionStatus? status;
 |};
+
