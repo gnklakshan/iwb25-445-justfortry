@@ -100,16 +100,14 @@ public isolated function getAllAccountsSummery(http:Request request, string date
 }
 
 # Calculate start date based on date range
-# + dateRange - Date range string (7D, 1M, 3M, 6M, 1Y, ALL)
-# + return - Start date string in ISO format
 isolated function calculateStartDate(string dateRange) returns string {
     time:Utc currentTime = time:utcNow();
-    
-    // Handle "ALL" case - return a very old date to include all transactions
+
+    //  "ALL" 
     if dateRange == "ALL" {
         return "1900-01-01T00:00:00Z";
     }
-    
+
     // Define date ranges locally
     map<int> dateRanges = {
         "7D": 7,
@@ -118,26 +116,23 @@ isolated function calculateStartDate(string dateRange) returns string {
         "6M": 180,
         "1Y": 365
     };
-    
-    // Get days to subtract from local dateRanges map
+
+    // Get days to subtract
     int|() daysValue = dateRanges[dateRange];
     if daysValue is () {
         // Default to 30 days if invalid range provided
         time:Utc startDate = time:utcAddSeconds(currentTime, <time:Seconds>(-30 * 24 * 3600));
         return time:utcToString(startDate);
     }
-    
+
     int days = daysValue;
     time:Seconds secondsToSubtract = <time:Seconds>(-days * 24 * 3600);
     time:Utc startDate = time:utcAddSeconds(currentTime, secondsToSubtract);
-    
+
     return time:utcToString(startDate);
 }
 
 # Get account by ID function
-# + request - HTTP request with Authorization header
-# + accountId - Account ID to retrieve
-# + return - Account response or error
 public isolated function getAccountById(http:Request request, string accountId) returns types:AccountResponse|error {
     // Validate authorization header using utility function
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
