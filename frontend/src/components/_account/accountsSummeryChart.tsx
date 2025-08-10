@@ -102,7 +102,7 @@ const CHART_CONFIGS = {
 };
 
 // Chart order for circular navigation
-const CHART_ORDER: ChartType[] = ["bar", "pie", "composed"];
+const CHART_ORDER: ChartType[] = ["composed", "bar", "pie"];
 
 // color palette
 const COLORS = [
@@ -386,19 +386,17 @@ const AccountSummaryChart: React.FC = () => {
     };
 
     return (
-      <Card className="border-0 shadow-sm">
+      <Card className="border-1 shadow-none hover:shadow-lg transition-shadow duration-300">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                {title}
-              </p>
+              <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
               <p className={`text-2xl font-bold ${getColorClass()}`}>
                 {formatCurrency(value)}
               </p>
             </div>
-            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full">
-              <Icon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+            <div className="p-3 bg-gray-100  rounded-full">
+              <Icon className="w-6 h-6 text-gray-600 " />
             </div>
           </div>
         </CardContent>
@@ -630,30 +628,29 @@ const AccountSummaryChart: React.FC = () => {
         </Card>
       )}
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Balance"
-          value={chartData.totals.balance}
-          icon={Wallet}
-          trend={chartData.totals.balance >= 0 ? "positive" : "negative"}
-        />
-        <StatCard
-          title="Total Income"
-          value={chartData.totals.income}
-          icon={TrendingUp}
-          trend="positive"
-        />
-        <StatCard
-          title="Total Expenses"
-          value={chartData.totals.expenses}
-          icon={TrendingDown}
-          trend="negative"
-        />
-      </div>
-
       {/* Main Chart with Swipe Navigation */}
       <Card className="shadow-none overflow-hidden">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-3">
+          <StatCard
+            title="Total Balance"
+            value={chartData.totals.balance}
+            icon={Wallet}
+            trend={chartData.totals.balance >= 0 ? "positive" : "negative"}
+          />
+          <StatCard
+            title="Total Income"
+            value={chartData.totals.income}
+            icon={TrendingUp}
+            trend="positive"
+          />
+          <StatCard
+            title="Total Expenses"
+            value={chartData.totals.expenses}
+            icon={TrendingDown}
+            trend="negative"
+          />
+        </div>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold">
@@ -666,13 +663,6 @@ const AccountSummaryChart: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          {/* Swipe Instructions */}
-          <div className="mb-4 text-center">
-            <p className="text-xs text-gray-400 dark:text-gray-500">
-              👆 Swipe left/right or scroll to navigate charts
-            </p>
-          </div>
-
           {/* Chart Container with Swipe Support */}
           <div
             ref={chartContainerRef}

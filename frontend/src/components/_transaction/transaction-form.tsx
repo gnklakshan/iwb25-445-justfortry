@@ -81,7 +81,7 @@ const TransactionForm: React.FC = () => {
   const fetchAccounts = useCallback(async () => {
     try {
       const response = await get("/accounts");
-      if (response.success) {
+      if (response) {
         setAccounts(response.data);
       }
     } catch (err) {
