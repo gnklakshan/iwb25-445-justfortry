@@ -1,4 +1,5 @@
 import AccountCard from "@/components/_account/accountCard";
+import AccountSummaryChart from "@/components/_account/accountsSummeryChart";
 import AddNewAccCard from "@/components/_account/addNewAccCard";
 import TransactionSummery from "@/components/_transaction/tansaction-summery";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -41,11 +42,12 @@ const Dashboard = () => {
           <div className="space-y-8 pt-28 px-30">
             <div className="flex items-center justify-between mb-5">
               <h1 className="text-5xl bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent tracking-tight ">
-                Dashboard
+                Account Overview
               </h1>
             </div>
 
             {/* summery */}
+            <AccountSummaryChart />
             <TransactionSummery />
 
             {/* account section */}
