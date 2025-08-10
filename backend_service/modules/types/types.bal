@@ -91,7 +91,7 @@ public type AccountResponse record {|
 public type AccountSummeryResponse record {|
     string id;
     string name;
-    AccountType accountType;
+    string accountType;
     decimal balance;
     decimal income;
     decimal expenses;
@@ -117,7 +117,15 @@ public type Transaction record {|
     *timeMetadata;
 |};
 
-# Account with transactions response 
+# Account with transactions response
+#
+# + id - field description  
+# + name - field description  
+# + accountType - field description  
+# + balance - field description  
+# + isDefault - field description  
+# + userId - field description  
+# + transactions - field description
 public type AccountWithTransactionsResponse record {|
     string id;
     string name;

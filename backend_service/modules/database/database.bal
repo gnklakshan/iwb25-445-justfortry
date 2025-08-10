@@ -140,7 +140,7 @@ public isolated function getAccountSummeryByUserId(string userId, string dateFro
         SELECT 
             a.id, 
             a.name, 
-            a.accountType, 
+            a.accountType::text as accountType, 
             a.balance, 
             COALESCE(SUM(CASE WHEN t.transactionType = 'INCOME' THEN t.amount ELSE 0 END), 0) AS income,
             COALESCE(SUM(CASE WHEN t.transactionType = 'EXPENSE' THEN t.amount ELSE 0 END), 0) AS expenses,
