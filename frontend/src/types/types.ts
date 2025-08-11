@@ -45,9 +45,8 @@ export type Transaction = {
 //type budget
 
 export type BudgetResponse = {
-  id: string;
   accountName: string;
   initialBudget: number;
   currentExpenses: number;
-  recentTransactions: Transaction[];
+  lastAlertSent: string;
 };

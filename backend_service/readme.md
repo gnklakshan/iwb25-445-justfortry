@@ -358,27 +358,25 @@ Retrieves the current budget for a user.
 
 ```json
 {
-  "budget": {
-    "id": "string",
-    "amount": "number",
+  "success": "boolean",
+  "data": {
+    "accountName": "string",
+    "initialBudget": "number",
     "lastAlertSent": "string",
     "userId": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  },
-  "currentExpenses": "number"
+    "currentExpenses": "number"
+  }
 }
 ```
 
 ### `PUT /budgets`
 
-Updates the budget for a user.
+Updates the budget for a default account.
 
 **Request Body:**
 
 ```json
 {
-  "userId": "string",
   "amount": "number"
 }
 ```
@@ -389,12 +387,11 @@ Updates the budget for a user.
 {
   "success": "boolean",
   "data": {
-    "id": "string",
-    "amount": "number",
+    "accountName": "string",
+    "initialBudget": "number",
     "lastAlertSent": "string",
     "userId": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
+    "currentExpenses": "number"
   }
 }
 ```
