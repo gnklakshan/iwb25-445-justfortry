@@ -369,9 +369,9 @@ Retrieves the current budget for a user.
 }
 ```
 
-### `PUT /budgets`
+### `POST /budgets`
 
-Updates the budget for a default account.
+Updates the budget for a user.
 
 **Request Body:**
 
