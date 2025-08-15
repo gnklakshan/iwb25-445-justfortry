@@ -41,3 +41,10 @@ export type Transaction = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+//type budget
+export type BudgetResponse = {
+  accountName: string;
+  initialBudget: number;
+  currentExpenses: number;
+};
