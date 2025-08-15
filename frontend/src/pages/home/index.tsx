@@ -1,18 +1,21 @@
 import AccountCard from "@/components/_account/accountCard";
 import AccountSummaryChart from "@/components/_account/accountsSummeryChart";
 import AddNewAccCard from "@/components/_account/addNewAccCard";
+import BudgetProgressCard from "@/components/_budget/budgetProgressCard";
 import TransactionSummery from "@/components/_transaction/tansaction-summery";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import useAxios from "@/hooks/useAxios";
-import { Account } from "@/types/types";
+import { Account, BudgetResponse } from "@/types/types";
 import React, { useCallback, useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
+import { set } from "zod";
 
 const Dashboard = () => {
   const { get, loading, error } = useAxios();
   const [userAccounts, setUserAccounts] = useState<Account[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [budgetData, setBudgetData] = useState<BudgetResponse | null>(null);
 
   //get all accounts of the user
   const getUserAccounts = useCallback(async () => {
@@ -28,10 +31,37 @@ const Dashboard = () => {
     }
   }, [get, error, isDrawerOpen]);
 
+  //get budget for default account
+  const getDefaultAccountBudget = useCallback(async () => {
+    try {
+      const response = await get("/budgets");
+      if (response) {
+        setBudgetData(response);
+      }
+    } catch (err) {
+      console.error("Error fetching default account budget:", err);
+    }
+  }, [get, error]);
+
   // Fetch user accounts when the component mounts
   useEffect(() => {
     getUserAccounts();
   }, [getUserAccounts]);
+
+  const handleUpdateBudget = async (newBudget: number) => {
+    try {
+      const response = await get("/budgets", {
+        params: { budget: newBudget },
+      });
+      if (response.success) {
+        setBudgetData(response.data);
+        toast.success("Budget updated successfully");
+      }
+    } catch (err) {
+      console.error("Error updating budget:", err, error);
+      toast.error("Error updating budget", { description: error });
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -45,6 +75,18 @@ const Dashboard = () => {
                 Account Overview
               </h1>
             </div>
+
+            {/* budget for default account */}
+            <BudgetProgressCard
+              budget={
+                budgetData || {
+                  accountName: "",
+                  initialBudget: 0,
+                  currentExpenses: 0,
+                }
+              }
+              onUpdateBudget={() => handleUpdateBudget}
+            />
 
             {/* summery */}
             <AccountSummaryChart />
