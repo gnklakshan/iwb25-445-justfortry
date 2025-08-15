@@ -89,7 +89,7 @@ const BudgetProgressCard = ({
                 <CardDescription>
                   {initialBudget
                     ? `$${currentExpenses.toFixed(
-                        2
+                        2,
                       )} of $${initialBudget.toFixed(2)} spent`
                     : "No budget set"}
                 </CardDescription>
