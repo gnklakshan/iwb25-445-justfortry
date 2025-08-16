@@ -45,6 +45,7 @@ export type Transaction = {
 //type budget
 export type BudgetResponse = {
   accountName: string;
-  initialBudget: number;
-  currentExpenses: number;
+  budget: number;
+  balance: number;
+  accountType:string;
 };
