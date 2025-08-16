@@ -101,6 +101,14 @@ public isolated function createAccount(types:Account account) returns error? {
     string createdAtStr = time:utcToString(account.createdAt);
     string updatedAtStr = time:utcToString(account.updatedAt);
 
+    boolean|error isThereDefaultAccount = checkIsThereDefaultAccount(account.userId);
+
+    if isThereDefaultAccount is error {
+        return error("Error checking default account: " + isThereDefaultAccount.message());
+    }
+
+    boolean isNotDefaultForUser = !isThereDefaultAccount;
+
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO accounts (id, name, accountType, balance, isDefault, userId, createdAt, updatedAt)
         VALUES (${account.id}, ${account.name}, ${account.accountType}, ${account.balance}, ${account.isDefault}, ${account.userId}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
@@ -109,7 +117,30 @@ public isolated function createAccount(types:Account account) returns error? {
     if result is sql:Error {
         return error("Failed to create account: " + result.message());
     }
+    if !isNotDefaultForUser && account.isDefault {
+        error? accountStatus = updateAccountStatus(account.id, account.userId, true);
+    }
+    //if there is no any default account then make this default
+    if isNotDefaultForUser {
+        error? accountStatus = updateAccountStatus(account.id, account.userId, true);
+    }
     return;
+}
+
+//function to check , there is a default accounts
+public isolated function checkIsThereDefaultAccount(string userId) returns boolean|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT COUNT(*) as count
+        FROM accounts
+        WHERE userId = ${userId} AND isDefault = true
+    `;
+
+    record {int count;}|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Database error while checking default account: " + result.message());
+    }
+    return result.count > 0;
 }
 
 # Get accounts by user ID from database
