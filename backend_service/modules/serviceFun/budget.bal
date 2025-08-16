@@ -47,7 +47,7 @@ public isolated function getUserBudget(http:Request request) returns types:Budge
     }
 
     return {
-        amount: budget.amount,
+        budget: budget.amount,
         accountName: account.name,
         accountType: account.accountType,
         balance: account.balance

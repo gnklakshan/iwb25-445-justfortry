@@ -14,23 +14,21 @@ import { Check, Pencil, X } from "lucide-react";
 import { Input } from "../ui/input";
 
 type BudgetProgressCardProps = {
-  budget: BudgetResponse;
+  budgetData: BudgetResponse;
   onUpdateBudget: () => void;
   isLoading?: boolean;
 };
 
 const BudgetProgressCard = ({
-  budget,
+  budgetData,
   onUpdateBudget,
   isLoading,
 }: BudgetProgressCardProps) => {
-  const { initialBudget, currentExpenses } = budget;
+  const { budget, balance, accountType } = budgetData;
   const [isEditing, setIsEditing] = useState(false);
-  const [newBudget, setNewBudget] = useState(initialBudget?.toString() || "");
+  const [newBudget, setNewBudget] = useState(budget?.toString() || "");
 
-  const percentUsed = initialBudget
-    ? (currentExpenses / initialBudget) * 100
-    : 0;
+  const percentUsed = budget ? (balance / budget) * 100 : 0;
 
   const handleUpdateBudget = async () => {
     const amount = parseFloat(newBudget);
@@ -44,7 +42,7 @@ const BudgetProgressCard = ({
   };
 
   const handleCancel = () => {
-    setNewBudget(initialBudget?.toString() || "");
+    setNewBudget(budget?.toString() || "");
     setIsEditing(false);
   };
 
@@ -87,10 +85,10 @@ const BudgetProgressCard = ({
             ) : (
               <>
                 <CardDescription>
-                  {initialBudget
-                    ? `$${currentExpenses.toFixed(
-                        2,
-                      )} of $${initialBudget.toFixed(2)} spent`
+                  {budget
+                    ? `$${(budget - balance).toFixed(
+                        2
+                      )} of $${budget.toFixed(2)} spent`
                     : "No budget set"}
                 </CardDescription>
                 <Button
@@ -107,7 +105,7 @@ const BudgetProgressCard = ({
         </div>
       </CardHeader>
       <CardContent>
-        {initialBudget && (
+        {budget && (
           <div className="space-y-2">
             <Progress
               value={percentUsed}

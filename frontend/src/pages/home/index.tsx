@@ -9,10 +9,9 @@ import { Account, BudgetResponse } from "@/types/types";
 import React, { useCallback, useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
-import { set } from "zod";
 
 const Dashboard = () => {
-  const { get, loading, error } = useAxios();
+  const { get, loading, error, patch } = useAxios();
   const [userAccounts, setUserAccounts] = useState<Account[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [budgetData, setBudgetData] = useState<BudgetResponse | null>(null);
@@ -34,14 +33,18 @@ const Dashboard = () => {
   //get budget for default account
   const getDefaultAccountBudget = useCallback(async () => {
     try {
-      const response = await get("/budgets");
+      const response = await get("budget");
       if (response) {
         setBudgetData(response);
       }
     } catch (err) {
       console.error("Error fetching default account budget:", err);
     }
-  }, [get, error]);
+  }, [get]);
+
+  useEffect(() => {
+    getDefaultAccountBudget();
+  }, [getDefaultAccountBudget]);
 
   // Fetch user accounts when the component mounts
   useEffect(() => {
@@ -50,8 +53,8 @@ const Dashboard = () => {
 
   const handleUpdateBudget = async (newBudget: number) => {
     try {
-      const response = await get("/budgets", {
-        params: { budget: newBudget },
+      const response = await patch("budget", {
+        amount: newBudget,
       });
       if (response.success) {
         setBudgetData(response.data);
@@ -78,11 +81,12 @@ const Dashboard = () => {
 
             {/* budget for default account */}
             <BudgetProgressCard
-              budget={
+              budgetData={
                 budgetData || {
-                  accountName: "",
-                  initialBudget: 0,
-                  currentExpenses: 0,
+                  accountName: "Default Account",
+                  budget: 0,
+                  balance: 0,
+                  accountType: "",
                 }
               }
               onUpdateBudget={() => handleUpdateBudget}

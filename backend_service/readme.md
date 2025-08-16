@@ -352,7 +352,7 @@ Retrieves the current budget for a user.
   "success": "boolean",
   "data": {
     "accountName": "string",
-    "balance": "number",
+    "budget": "number",
     "accountType": "string",
     "balance": "number"
   }
