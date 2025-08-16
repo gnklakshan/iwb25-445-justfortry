@@ -23,3 +23,33 @@ public isolated function updateUserBudget(http:Request request, types:UpdateBudg
 
     return updateBudgetRequest;
 }
+
+public isolated function getUserBudget(http:Request request) returns types:BudgetResponse|error {
+    // Validate authorization header 
+    types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
+
+    if authResult is http:Unauthorized {
+        return error("Unauthorized: Authentication required to fetch budget");
+    }
+
+    types:AuthenticatedUser authenticatedUser = authResult;
+    string userId = authenticatedUser.userId;
+
+    // get the budget
+    types:Budget|error budget = database:getBudgetByUserId(userId);
+    if budget is error {
+        return error("Failed to fetch budget: " + budget.message());
+    }
+
+    types:Account|error account = database:getDefaultAccount(userId);
+    if account is error {
+        return error("Failed to fetch default account: " + account.message());
+    }
+
+    return {
+        amount: budget.amount,
+        accountName: account.name,
+        accountType: account.accountType,
+        balance: account.balance
+    };
+}

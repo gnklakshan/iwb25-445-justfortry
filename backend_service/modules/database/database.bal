@@ -503,3 +503,35 @@ public isolated function updateBudget(string userId, decimal newAmount) returns 
 
     return;
 }
+
+public isolated function getBudgetByUserId(string userId) returns types:Budget|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT id, userId, amount, createdAt, updatedAt
+        FROM budgets
+        WHERE userId = ${userId}
+    `;
+
+    types:Budget|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Budget not found or database error: " + result.message());
+    }
+
+    return result;
+}
+
+public isolated function getDefaultAccount(string userId) returns types:Account|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT id, userId, accountType::text as accountType, balance, createdAt, updatedAt
+        FROM accounts
+        WHERE userId = ${userId} AND isDefault = true
+    `;
+
+    types:Account|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Default account not found or database error: " + result.message());
+    }
+
+    return result;
+}

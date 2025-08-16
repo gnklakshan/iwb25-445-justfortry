@@ -352,10 +352,9 @@ Retrieves the current budget for a user.
   "success": "boolean",
   "data": {
     "accountName": "string",
-    "initialBudget": "number",
-    "lastAlertSent": "string",
-    "userId": "string",
-    "currentExpenses": "number"
+    "balance": "number",
+    "accountType": "string",
+    "balance": "number"
   }
 }
 ```
