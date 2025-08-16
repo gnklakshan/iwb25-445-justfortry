@@ -101,6 +101,14 @@ public isolated function createAccount(types:Account account) returns error? {
     string createdAtStr = time:utcToString(account.createdAt);
     string updatedAtStr = time:utcToString(account.updatedAt);
 
+    boolean|error isThereDefaultAccount = checkIsThereDefaultAccount(account.userId);
+
+    if isThereDefaultAccount is error {
+        return error("Error checking default account: " + isThereDefaultAccount.message());
+    }
+
+    boolean isNotDefaultForUser = !isThereDefaultAccount;
+
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO accounts (id, name, accountType, balance, isDefault, userId, createdAt, updatedAt)
         VALUES (${account.id}, ${account.name}, ${account.accountType}, ${account.balance}, ${account.isDefault}, ${account.userId}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
@@ -109,15 +117,10 @@ public isolated function createAccount(types:Account account) returns error? {
     if result is sql:Error {
         return error("Failed to create account: " + result.message());
     }
-    //if there is no any default account then make this default
-
-    boolean|error isThereDefaultAccount = checkIsThereDefaultAccount(account.userId);
-
-    if isThereDefaultAccount is error {
-        return error("Error checking default account: " + isThereDefaultAccount.message());
+    if !isNotDefaultForUser && account.isDefault {
+        error? accountStatus = updateAccountStatus(account.id, account.userId, true);
     }
-
-    boolean isNotDefaultForUser = !isThereDefaultAccount;
+    //if there is no any default account then make this default
     if isNotDefaultForUser {
         error? accountStatus = updateAccountStatus(account.id, account.userId, true);
     }
