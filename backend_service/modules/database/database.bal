@@ -109,7 +109,35 @@ public isolated function createAccount(types:Account account) returns error? {
     if result is sql:Error {
         return error("Failed to create account: " + result.message());
     }
+    //if there is no any default account then make this default
+
+    boolean|error isThereDefaultAccount = checkIsThereDefaultAccount(account.userId);
+
+    if isThereDefaultAccount is error {
+        return error("Error checking default account: " + isThereDefaultAccount.message());
+    }
+
+    boolean isNotDefaultForUser = !isThereDefaultAccount;
+    if isNotDefaultForUser {
+        error? accountStatus = updateAccountStatus(account.id, account.userId, true);
+    }
     return;
+}
+
+//function to check , there is a default accounts
+public isolated function checkIsThereDefaultAccount(string userId) returns boolean|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT COUNT(*) as count
+        FROM accounts
+        WHERE userId = ${userId} AND isDefault = true
+    `;
+
+    record {int count;}|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Database error while checking default account: " + result.message());
+    }
+    return result.count > 0;
 }
 
 # Get accounts by user ID from database
