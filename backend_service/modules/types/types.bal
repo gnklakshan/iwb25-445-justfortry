@@ -187,3 +187,7 @@ public type Budget record {|
     decimal amount;
     *timeMetadata;
 |};
+
+public type UpdateBudgetRequest record {|
+    decimal amount;
+|};

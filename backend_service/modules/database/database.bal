@@ -487,3 +487,19 @@ isolated function createDefaultBudget(string userId) returns error? {
 
     return;
 }
+
+public isolated function updateBudget(string userId, decimal newAmount) returns error? {
+    sql:ParameterizedQuery updateQuery = `
+        UPDATE budgets
+        SET amount = ${newAmount}
+        WHERE userId = ${userId}
+    `;
+
+    sql:ExecutionResult|sql:Error result = dbClient->execute(updateQuery);
+
+    if result is error {
+        return error("Failed to update budget: " + result.message());
+    }
+
+    return;
+}
