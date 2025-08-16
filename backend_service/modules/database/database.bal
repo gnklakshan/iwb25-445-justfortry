@@ -2,6 +2,7 @@ import backend_service.types;
 
 import ballerina/sql;
 import ballerina/time;
+import ballerina/uuid;
 import ballerinax/java.jdbc as jdbc;
 
 # Database configuration - these will be read from Config.toml or environment variables
@@ -44,14 +45,20 @@ public isolated function createUser(types:User user) returns error? {
 
     string createdAtStr = time:utcToString(user.createdAt);
     string updatedAtStr = time:utcToString(user.updatedAt);
+    string userName = user?.name ?: "";
 
     sql:ExecutionResult|sql:Error result = dbClient->execute(`
         INSERT INTO users (id, email, name, hashedPassword, createdAt, updatedAt)
-        VALUES (${user.id}, ${user.email}, ${user.name}, ${user.hashedPassword}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
+        VALUES (${user.id}, ${user.email}, ${userName}, ${user.hashedPassword}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
     `);
 
     if result is sql:Error {
         return error("Failed to create user: " + result.message());
+    }
+    // Create default budget for the user
+    error? budgetResult = createDefaultBudget(user.id);
+    if budgetResult is error {
+        return error("Failed to create default budget: " + budgetResult.message());
     }
     return;
 }
@@ -455,4 +462,28 @@ public isolated function fetchTransactionById(string transactionId, string userI
     }
 
     return result;
+}
+
+isolated function createDefaultBudget(string userId) returns error? {
+    types:Budget defaultBudget = {
+        id: uuid:createType1AsString(),
+        userId: userId,
+        amount: 0.0,
+        createdAt: time:utcNow(),
+        updatedAt: time:utcNow()
+    };
+
+    string createdAtStr = time:utcToString(defaultBudget.createdAt);
+    string updatedAtStr = time:utcToString(defaultBudget.updatedAt);
+
+    sql:ExecutionResult|sql:Error result = dbClient->execute(`
+        INSERT INTO budgets (id, userId, amount, createdAt, updatedAt)
+        VALUES (${defaultBudget.id}, ${defaultBudget.userId}, ${defaultBudget.amount}, ${createdAtStr}::timestamp, ${updatedAtStr}::timestamp)
+    `);
+
+    if result is error {
+        return error("Failed to create default budget: " + result.message());
+    }
+
+    return;
 }
