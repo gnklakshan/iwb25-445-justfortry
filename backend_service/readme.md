@@ -341,18 +341,9 @@ Updates a transaction.
 
 ## Budgets API
 
-### `GET /budgets`
+### `GET /budget`
 
 Retrieves the current budget for a user.
-
-**Request Body:**
-
-```json
-{
-  "userId": "string",
-  "accountId": "string"
-}
-```
 
 **Response:**
 
@@ -369,7 +360,7 @@ Retrieves the current budget for a user.
 }
 ```
 
-### `POST /budgets`
+### `PATCH /budget`
 
 Updates the budget for a user.
 
@@ -387,11 +378,7 @@ Updates the budget for a user.
 {
   "success": "boolean",
   "data": {
-    "accountName": "string",
-    "initialBudget": "number",
-    "lastAlertSent": "string",
-    "userId": "string",
-    "currentExpenses": "number"
+    "amount": "number"
   }
 }
 ```

@@ -180,3 +180,14 @@ public type UpdateTransactionRequest record {|
     TransactionStatus? status;
 |};
 
+// budget
+public type Budget record {|
+    string id;
+    string userId;
+    decimal amount;
+    *timeMetadata;
+|};
+
+public type UpdateBudgetRequest record {|
+    decimal amount;
+|};

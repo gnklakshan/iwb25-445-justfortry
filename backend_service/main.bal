@@ -434,4 +434,37 @@ service / on new http:Listener(9090) {
         json response = {"success": true, "data": updateResult.toJson()};
         return response;
     }
+
+    isolated resource function patch budget(http:Request request, types:UpdateBudgetRequest updateBudgetRequest) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
+        types:UpdateBudgetRequest|error updateResult = serviceFun:updateUserBudget(request, updateBudgetRequest);
+
+        if updateResult is error {
+            string errorMessage = updateResult.message();
+
+            // Check if it's an authentication error
+            if errorMessage.includes("Unauthorized") {
+                return <http:Unauthorized>{
+                    body: {
+                        success: false,
+                        message: "Authentication required. Please provide a valid access token."
+                    }
+                };
+            }
+
+            // Generic error for other issues
+            return <http:InternalServerError>{
+                body: {
+                    success: false,
+                    message: errorMessage
+                }
+            };
+        }
+
+        json response = {
+            "success": true,
+            "data": updateResult.toJson()
+        };
+
+        return response;
+    }
 }
