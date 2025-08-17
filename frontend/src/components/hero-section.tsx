@@ -1,38 +1,3 @@
-// import React from "react";
-// import { Badge } from "./ui/badge";
-// import { ArrowRight, Zap } from "lucide-react";
-// import { Button } from "./ui/button";
-
-// const HeroSection = () => {
-//   return (
-//     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-//       <div className="max-w-4xl mx-auto text-center">
-//         <Badge variant="secondary" className="mb-6 ">
-//           <Zap className="h-3 w-3 mr-1 text-orange-400" />
-//           Powered by Ballerina
-//         </Badge>
-//         <h1 className="font-heading font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
-//           Take Control of Your
-//           <span className="text-primary block ">Financial Future</span>
-//         </h1>
-//         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-//           Securely track spending, manage multiple accounts, set smart budgets,
-//           and analyze your financial patterns with our comprehensive personal
-//           finance platform.
-//         </p>
-//         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-//           <Button size="lg" className="text-lg px-8 text-white">
-//             Start Tracking Your Finances
-//             <ArrowRight className="ml-2 h-5 w-5 text-orange-400" />
-//           </Button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default HeroSection;
-
 import React from "react";
 import { Badge } from "./ui/badge";
 import { ArrowRight, Zap } from "lucide-react";
