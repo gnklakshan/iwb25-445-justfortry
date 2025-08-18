@@ -194,7 +194,5 @@ public type UpdateBudgetRequest record {|
 
 public type BudgetResponse record {|
     decimal amount;
-    string accountName;
-    string accountType;
     decimal balance;
 |};

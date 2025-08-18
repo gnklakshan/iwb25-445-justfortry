@@ -43,6 +43,15 @@ public isolated function getUserBudget(http:Request request) returns types:Budge
 
     types:Account|error account = database:getDefaultAccount(userId);
     if account is error {
+        // Check if the error is specifically due to no default account
+        if account.message() == "Default account not found or database error" {
+            return {
+                amount: budget.amount,
+                accountName: "",
+                accountType: "",
+                balance: 0
+            };
+        }
         return error("Failed to fetch default account: " + account.message());
     }
 

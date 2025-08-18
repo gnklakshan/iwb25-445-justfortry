@@ -521,6 +521,13 @@ public isolated function getBudgetByUserId(string userId) returns types:Budget|e
 }
 
 public isolated function getDefaultAccount(string userId) returns types:Account|error {
+    boolean|error isThereDefaultAccount = checkIsThereDefaultAccount(userId);
+    if isThereDefaultAccount is error {
+        return error("Failed to check default account existence: " + isThereDefaultAccount.message());
+    }
+    if !isThereDefaultAccount {
+        return error("No default account exists for user: " + userId);
+    }
     sql:ParameterizedQuery selectQuery = `
         SELECT id, userId, accountType::text as accountType, balance, createdAt, updatedAt
         FROM accounts
