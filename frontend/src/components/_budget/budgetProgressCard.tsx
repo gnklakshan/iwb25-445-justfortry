@@ -15,7 +15,7 @@ import { Input } from "../ui/input";
 
 type BudgetProgressCardProps = {
   budget: BudgetResponse;
-  onUpdateBudget: () => void;
+  onUpdateBudget: (newBudget: number) => void;
   isLoading?: boolean;
 };
 
@@ -39,8 +39,8 @@ const BudgetProgressCard = ({
       toast.error("Please enter a valid amount");
       return;
     }
-
-    await onUpdateBudget();
+    setIsEditing(false);
+    await onUpdateBudget(amount);
   };
 
   const handleCancel = () => {

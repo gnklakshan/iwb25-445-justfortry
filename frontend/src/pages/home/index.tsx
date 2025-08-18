@@ -9,10 +9,9 @@ import { Account, BudgetResponse } from "@/types/types";
 import React, { useCallback, useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
-import { set } from "zod";
 
 const Dashboard = () => {
-  const { get, loading, error } = useAxios();
+  const { get, patch, loading, error } = useAxios();
   const [userAccounts, setUserAccounts] = useState<Account[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [budgetData, setBudgetData] = useState<BudgetResponse | null>(null);
@@ -50,10 +49,11 @@ const Dashboard = () => {
 
   const handleUpdateBudget = async (newBudget: number) => {
     try {
-      const response = await get("/budgets", {
-        params: { budget: newBudget },
+      console.log("Updating budget to:", newBudget);
+      const response = await patch("budget", {
+        amount: newBudget,
       });
-      if (response.success) {
+      if (response) {
         setBudgetData(response.data);
         toast.success("Budget updated successfully");
       }
@@ -85,7 +85,7 @@ const Dashboard = () => {
                   currentExpenses: 0,
                 }
               }
-              onUpdateBudget={() => handleUpdateBudget}
+              onUpdateBudget={handleUpdateBudget}
             />
 
             {/* summery */}
