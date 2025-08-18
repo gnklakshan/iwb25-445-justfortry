@@ -33,7 +33,7 @@ const Dashboard = () => {
   //get budget for default account
   const getDefaultAccountBudget = useCallback(async () => {
     try {
-      const response = await get("/budgets");
+      const response = await get("budget");
       if (response) {
         setBudgetData(response);
       }
