@@ -4,7 +4,7 @@ import backend_service.types;
 
 import ballerina/http;
 
-public isolated function updateUserBudget(http:Request request, types:UpdateBudgetRequest updateBudgetRequest) returns types:UpdateBudgetRequest|error {
+public isolated function updateUserBudget(http:Request request, types:UpdateBudgetRequest updateBudgetRequest) returns types:BudgetResponse|error {
     // Validate authorization header 
     types:AuthenticatedUser|http:Unauthorized authResult = auth:validateAuthHeader(request);
 
@@ -20,8 +20,15 @@ public isolated function updateUserBudget(http:Request request, types:UpdateBudg
     if result is error {
         return error("Failed to update budget: " + result.message());
     }
+    decimal|error expense = database:getTotalExpensesOfUserForThisMonth(userId);
+    if expense is error {
+        return error("Failed to fetch total expenses: " + expense.message());
+    }
 
-    return updateBudgetRequest;
+    return {
+        amount: updateBudgetRequest.amount,
+        expense: expense
+    };
 }
 
 public isolated function getUserBudget(http:Request request) returns types:BudgetResponse|error {
@@ -41,24 +48,13 @@ public isolated function getUserBudget(http:Request request) returns types:Budge
         return error("Failed to fetch budget: " + budget.message());
     }
 
-    types:Account|error account = database:getDefaultAccount(userId);
-    if account is error {
-        // Check if the error is specifically due to no default account
-        if account.message() == "Default account not found or database error" {
-            return {
-                amount: budget.amount,
-                accountName: "",
-                accountType: "",
-                balance: 0
-            };
-        }
-        return error("Failed to fetch default account: " + account.message());
+    decimal|error expense = database:getTotalExpensesOfUserForThisMonth(userId);
+    if expense is error {
+        return error("Failed to fetch total expenses: " + expense.message());
     }
 
     return {
         amount: budget.amount,
-        accountName: account.name,
-        accountType: account.accountType,
-        balance: account.balance
+        expense: expense
     };
 }

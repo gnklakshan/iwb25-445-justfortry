@@ -436,7 +436,7 @@ service / on new http:Listener(9090) {
     }
 
     isolated resource function patch budget(http:Request request, types:UpdateBudgetRequest updateBudgetRequest) returns json|http:BadRequest|http:Unauthorized|http:InternalServerError {
-        types:UpdateBudgetRequest|error updateResult = serviceFun:updateUserBudget(request, updateBudgetRequest);
+        types:BudgetResponse|error updateResult = serviceFun:updateUserBudget(request, updateBudgetRequest);
 
         if updateResult is error {
             string errorMessage = updateResult.message();

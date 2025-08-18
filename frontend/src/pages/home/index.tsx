@@ -35,12 +35,16 @@ const Dashboard = () => {
     try {
       const response = await get("budget");
       if (response) {
-        setBudgetData(response);
+        setBudgetData(response.data);
       }
     } catch (err) {
       console.error("Error fetching default account budget:", err);
     }
   }, [get, error]);
+
+  useEffect(() => {
+    getDefaultAccountBudget();
+  }, [getDefaultAccountBudget]);
 
   // Fetch user accounts when the component mounts
   useEffect(() => {
@@ -80,9 +84,8 @@ const Dashboard = () => {
             <BudgetProgressCard
               budget={
                 budgetData || {
-                  accountName: "",
-                  initialBudget: 0,
-                  currentExpenses: 0,
+                  amount: 0,
+                  expense: 0,
                 }
               }
               onUpdateBudget={handleUpdateBudget}

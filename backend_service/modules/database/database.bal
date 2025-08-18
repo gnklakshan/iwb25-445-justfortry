@@ -542,3 +542,20 @@ public isolated function getDefaultAccount(string userId) returns types:Account|
 
     return result;
 }
+
+public isolated function getTotalExpensesOfUserForThisMonth(string userId) returns decimal|error {
+    sql:ParameterizedQuery selectQuery = `
+        SELECT SUM(amount) as totalExpenses
+        FROM transactions
+        WHERE userId = ${userId} AND date_trunc('month', date) = date_trunc('month', CURRENT_DATE)
+    `;
+
+    record {decimal? totalExpenses;}|sql:Error result = dbClient->queryRow(selectQuery);
+
+    if result is sql:Error {
+        return error("Failed to fetch total expenses: " + result.message());
+    }
+
+    decimal totalExpenses = result.totalExpenses is decimal ? <decimal>result.totalExpenses : 0.0;
+    return totalExpenses;
+}
