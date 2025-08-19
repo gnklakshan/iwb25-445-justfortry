@@ -51,7 +51,7 @@ const BudgetProgressCard = ({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex-1">
           <CardTitle className="text-sm font-medium">
-            Monthly Budget (Default Account)
+            Monthly Budget (All Accounts)
           </CardTitle>
           <div className="flex items-center gap-2 mt-1">
             {isEditing ? (
@@ -86,7 +86,7 @@ const BudgetProgressCard = ({
               <>
                 <CardDescription>
                   {amount
-                    ? `$${expense.toFixed(2)} of $${amount.toFixed(2)} spent`
+                    ? `LKR ${expense.toFixed(2)} of LKR ${amount.toFixed(2)} spent`
                     : "No budget set"}
                 </CardDescription>
                 <Button

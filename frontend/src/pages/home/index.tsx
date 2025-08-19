@@ -67,6 +67,25 @@ const Dashboard = () => {
     }
   };
 
+  const handleUpdateAccountStatus = useCallback(
+    async (accountId: string, isDefault: boolean) => {
+      try {
+        const response = await patch(
+          `accounts/${accountId}?isDefault=${isDefault}`,
+          {},
+        );
+        if (response) {
+          getUserAccounts();
+          toast.success(`Successfully updated default status `);
+        }
+      } catch (err) {
+        console.error("Error updating account status:", err);
+        toast.error(`Error updating account status for ${accountId}`);
+      }
+    },
+    [patch],
+  );
+
   return (
     <ProtectedRoute>
       {loading ? (
@@ -96,15 +115,23 @@ const Dashboard = () => {
             <TransactionSummery />
 
             {/* account section */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <AddNewAccCard
-                isOpen={isDrawerOpen}
-                setIsOpen={setIsDrawerOpen}
-              />
-              {userAccounts.length > 0 &&
-                userAccounts.map((account) => (
-                  <AccountCard key={account.id} account={account} />
-                ))}
+            <div className="py-4">
+              <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <AddNewAccCard
+                  isOpen={isDrawerOpen}
+                  setIsOpen={setIsDrawerOpen}
+                />
+                {userAccounts.length > 0 &&
+                  userAccounts.map((account) => (
+                    <AccountCard
+                      key={account.id}
+                      account={account}
+                      onUpdateStatus={handleUpdateAccountStatus}
+                      loading={loading}
+                    />
+                  ))}
+              </div>
             </div>
           </div>
         </div>

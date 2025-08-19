@@ -1,5 +1,5 @@
 import { Account } from "@/types/types";
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -7,17 +7,23 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Switch } from "@radix-ui/react-switch";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useRouter } from "next/router";
+import { Switch } from "../ui/switch";
+import useAxios from "@/hooks/useAxios";
 
-const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
+const AccountCard: React.FC<{
+  account: Account;
+  onUpdateStatus: (id: string, isDefault: boolean) => void;
+  loading: boolean;
+}> = ({ account, onUpdateStatus, loading }) => {
   const { id, name, accountType, balance, isDefault } = account;
 
   const router = useRouter();
-  const loading = false;
+
   const handleDefaultChange = () => {
     console.log(`Toggling default status for account ${id}`);
+    onUpdateStatus(id, !isDefault);
   };
 
   return (
@@ -29,12 +35,22 @@ const AccountCard: React.FC<{ account: Account }> = ({ account }) => {
         <CardTitle className="text-sm font-medium capitalize">{name}</CardTitle>
         <Switch
           checked={isDefault}
-          onClick={handleDefaultChange}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDefaultChange();
+          }}
           disabled={loading}
         />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">${balance.toFixed(2)}</div>
+        <div
+          className={`text-2xl font-bold ${balance < 0 ? "text-red-600" : ""}`}
+        >
+          LKR
+          {balance < 0
+            ? `- ${Math.abs(balance).toFixed(2)}`
+            : balance.toFixed(2)}
+        </div>
         <p className="text-xs text-muted-foreground">
           {accountType.charAt(0) + accountType.slice(1).toLowerCase()} Account
         </p>
