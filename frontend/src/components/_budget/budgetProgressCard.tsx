@@ -15,7 +15,7 @@ import { Input } from "../ui/input";
 
 type BudgetProgressCardProps = {
   budget: BudgetResponse;
-  onUpdateBudget: () => void;
+  onUpdateBudget: (newBudget: number) => void;
   isLoading?: boolean;
 };
 
@@ -24,13 +24,11 @@ const BudgetProgressCard = ({
   onUpdateBudget,
   isLoading,
 }: BudgetProgressCardProps) => {
-  const { initialBudget, currentExpenses } = budget;
+  const { amount, expense } = budget;
   const [isEditing, setIsEditing] = useState(false);
-  const [newBudget, setNewBudget] = useState(initialBudget?.toString() || "");
+  const [newBudget, setNewBudget] = useState(amount?.toString() || "");
 
-  const percentUsed = initialBudget
-    ? (currentExpenses / initialBudget) * 100
-    : 0;
+  const percentUsed = amount ? (expense / amount) * 100 : 0;
 
   const handleUpdateBudget = async () => {
     const amount = parseFloat(newBudget);
@@ -39,12 +37,12 @@ const BudgetProgressCard = ({
       toast.error("Please enter a valid amount");
       return;
     }
-
-    await onUpdateBudget();
+    setIsEditing(false);
+    await onUpdateBudget(amount);
   };
 
   const handleCancel = () => {
-    setNewBudget(initialBudget?.toString() || "");
+    setNewBudget(amount?.toString() || "");
     setIsEditing(false);
   };
 
@@ -87,10 +85,8 @@ const BudgetProgressCard = ({
             ) : (
               <>
                 <CardDescription>
-                  {initialBudget
-                    ? `$${currentExpenses.toFixed(
-                        2,
-                      )} of $${initialBudget.toFixed(2)} spent`
+                  {amount
+                    ? `$${expense.toFixed(2)} of $${amount.toFixed(2)} spent`
                     : "No budget set"}
                 </CardDescription>
                 <Button
@@ -107,7 +103,7 @@ const BudgetProgressCard = ({
         </div>
       </CardHeader>
       <CardContent>
-        {initialBudget && (
+        {amount && (
           <div className="space-y-2">
             <Progress
               value={percentUsed}

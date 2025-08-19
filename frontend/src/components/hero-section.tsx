@@ -2,8 +2,12 @@ import React from "react";
 import { Badge } from "./ui/badge";
 import { ArrowRight, Zap } from "lucide-react";
 import { Button } from "./ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 
 const HeroSection = () => {
+  const { isLoggedIn } = useAuth();
+  const router = useRouter();
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
       {/* Decorative financial grid lines */}
@@ -40,6 +44,13 @@ const HeroSection = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
+            onClick={() => {
+              if (isLoggedIn) {
+                router.push("/home");
+              } else {
+                router.push("/auth/sign-in");
+              }
+            }}
             className="text-lg px-8 text-white bg-gradient-to-r from-emerald-500 to-blue-600 shadow-lg shadow-emerald-200/50 hover:scale-105 transition-transform"
           >
             Start Tracking Your Finances

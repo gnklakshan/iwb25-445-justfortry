@@ -367,7 +367,8 @@ Updates the budget for a user.
 
 ```json
 {
-  "amount": "number"
+  "amount": "number",
+  "expense": "number"
 }
 ```
 
@@ -377,7 +378,8 @@ Updates the budget for a user.
 {
   "success": "boolean",
   "data": {
-    "amount": "number"
+    "amount": "number",
+    "expense": "number"
   }
 }
 ```
