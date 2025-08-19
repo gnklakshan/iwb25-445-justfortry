@@ -142,15 +142,7 @@ npm install
 yarn install
 ```
 
-#### 3. Configure API Endpoint
-
-- Update the `.env` or configuration file to point to your backend server URL, e.g.,
-
-  ```
-  REACT_APP_API_URL=http://localhost:8080
-  ```
-
-#### 4. Run the Frontend Application
+#### 3. Run the Frontend Application
 
 ```bash
 npm start
